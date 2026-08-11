@@ -1,4 +1,4 @@
-# Plataforma de Simulados — esqueleto (Docker + Sanic + Postgres + Login Google)
+# Vecomota — plataforma de simulados (Docker + Sanic + Postgres + Login Google)
 
 Modelo: **qualquer usuário logado cria sua própria prova** (dono = quem criou) e
 compartilha um link secreto com quem for responder. Um papel de **admin**
@@ -100,7 +100,7 @@ essa é a base que ele vai consumir.
 
 
 ```
-estudos-app/
+vecomota/
 ├── docker-compose.yml
 ├── .env.example
 ├── db/

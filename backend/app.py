@@ -9,7 +9,7 @@ import auth as auth_lib
 from db import get_pool, close_pool
 from import_schema import validate_import, slugify
 
-app = Sanic("EstudosApp")
+app = Sanic("Vecomota")
 # Serve os arquivos estáticos do frontend (admin.html, simulado-interativo.html, i18n/...)
 app.static("/", "/app/frontend")
 
