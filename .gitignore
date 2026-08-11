@@ -1,0 +1,20 @@
+# Segredos reais — NUNCA commitar. Só .env.example vai pro repositório.
+.env
+
+# Dados do Postgres (o volume do Docker já persiste isso fora do git)
+db_data/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editor / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulados — Seriado UFMG</title>
+<style>
+  :root{
+    --paper:#f5f2ea;
+    --paper-line:#e3ddc9;
+    --ink:#20281f;
+    --ink-soft:#5b6357;
+    --pine:#2f5233;
+    --pine-deep:#1e3a21;
+    --gold:#b08a2e;
+    --wrong:#9a3324;
+    --right:#2f6b3a;
+    --card:#fffdf7;
+    font-size:16px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Georgia","Iowan Old Style",serif;
+    line-height:1.5;
+  }
+  .ui{ font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif; }
+
+  header.top{
+    background:var(--pine-deep);
+    color:#f2ede0;
+    padding:22px 24px 20px;
+    border-bottom:4px solid var(--gold);
+  }
+  header.top .eyebrow{
+    text-transform:uppercase;
+    letter-spacing:.14em;
+    font-size:.7rem;
+    color:#c9d6c4;
+    font-family:inherit;
+  }
+  header.top h1{
+    margin:.15em 0 0;
+    font-size:1.6rem;
+    font-weight:600;
+    font-family:Georgia,serif;
+  }
+  header.top .sub{
+    color:#d7dfce;
+    font-size:.92rem;
+    margin-top:4px;
+  }
+
+  main{
+    max-width:760px;
+    margin:0 auto;
+    padding:24px 18px 80px;
+  }
+
+  .panel{
+    background:var(--card);
+    border:1px solid var(--paper-line);
+    border-radius:3px;
+    box-shadow:0 1px 0 var(--paper-line);
+    padding:20px 22px;
+    margin-bottom:18px;
+  }
+
+  .history-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+  }
+  .history-row .stat{
+    text-align:center;
+  }
+  .history-row .stat .num{
+    font-size:1.7rem;
+    font-weight:700;
+    color:var(--pine);
+    font-family:Georgia,serif;
+  }
+  .history-row .stat .lbl{
+    font-family:inherit;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    font-size:.65rem;
+    color:var(--ink-soft);
+  }
+  #history-list{
+    margin-top:14px;
+    border-top:1px dashed var(--paper-line);
+    padding-top:10px;
+  }
+  .attempt-line{
+    display:flex;
+    justify-content:space-between;
+    font-family:inherit;
+    font-size:.85rem;
+    padding:4px 0;
+    color:var(--ink-soft);
+  }
+  .attempt-line b{ color:var(--ink); }
+
+  .qcard{
+    counter-increment:qn;
+  }
+  .qnum{
+    font-family:inherit;
+    font-size:.72rem;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:6px;
+    display:block;
+  }
+  .qtext{
+    font-size:1.05rem;
+    margin-bottom:14px;
+  }
+  .opt{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:9px 10px;
+    border:1px solid transparent;
+    border-radius:3px;
+    cursor:pointer;
+    margin-bottom:5px;
+  }
+  .opt:hover{ background:#f1ede0; }
+  .opt input{ margin-top:4px; accent-color:var(--pine); }
+  .opt.selected{ background:#eef2e6; border-color:var(--pine); }
+  .opt.correct{ background:#e6f2e4; border-color:var(--right); }
+  .opt.incorrect{ background:#f5e6e1; border-color:var(--wrong); }
+  .opt .letter{ font-weight:700; font-family:inherit; }
+
+  .explain{
+    display:none;
+    margin-top:10px;
+    padding:10px 12px;
+    background:#faf7ee;
+    border-left:3px solid var(--gold);
+    font-family:inherit;
+    font-size:.88rem;
+    color:var(--ink-soft);
+  }
+  .explain.show{ display:block; }
+
+  .tag{
+    display:inline-block;
+    font-family:inherit;
+    font-size:.68rem;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:#fff;
+    background:var(--ink-soft);
+    padding:2px 8px;
+    border-radius:2px;
+    margin-left:8px;
+  }
+
+  .no-select{
+    user-select:none;
+    -webkit-user-select:none;
+    -moz-user-select:none;
+  }
+  .integrity-banner{
+    display:none;
+    background:#fbf3e0;
+    border:1px solid var(--gold);
+    color:var(--ink);
+    font-family:inherit;
+    font-size:.82rem;
+    padding:9px 14px;
+    border-radius:3px;
+    margin-bottom:16px;
+  }
+  .integrity-banner.show{ display:block; }
+  .pass-badge{
+    display:inline-block;
+    font-family:inherit;
+    font-size:.78rem;
+    font-weight:700;
+    letter-spacing:.04em;
+    padding:4px 12px;
+    border-radius:14px;
+    margin-top:10px;
+  }
+  .pass-badge.pass{ background:#e6f2e4; color:var(--right); }
+  .pass-badge.fail{ background:#f5e6e1; color:var(--wrong); }
+  .integrity-summary{
+    margin-top:12px;
+    font-family:inherit;
+    font-size:.78rem;
+    color:var(--ink-soft);
+  }
+
+  .warning-overlay{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(20,15,5,.55);
+    z-index:50;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  .warning-overlay.show{ display:flex; }
+  .warning-modal{
+    background:var(--card);
+    border:2px solid var(--wrong);
+    border-radius:4px;
+    max-width:420px;
+    padding:24px;
+    text-align:center;
+  }
+  .warning-modal .icon{ font-size:2rem; margin-bottom:6px; }
+  .warning-modal h3{
+    font-family:Georgia,serif;
+    color:var(--wrong);
+    margin:0 0 10px;
+  }
+  .warning-modal p{
+    font-family:inherit;
+    font-size:.9rem;
+    color:var(--ink-soft);
+    margin-bottom:18px;
+  }
+  .warning-modal button{
+    background:var(--pine); color:#fff;
+  }
+
+  .timer-badge{
+    display:none;
+    text-align:center;
+    font-family:inherit;
+    font-size:.95rem;
+    font-weight:700;
+    color:var(--pine-deep);
+    background:#eef2e6;
+    border-radius:3px;
+    padding:8px;
+    margin-bottom:16px;
+  }
+  .timer-badge.show{ display:block; }
+  .timer-badge.low-time{ background:#f5e6e1; color:var(--wrong); }
+
+
+  .actions{
+    position:sticky;
+    bottom:0;
+    background:linear-gradient(to top, var(--paper) 70%, transparent);
+    padding:18px 0 8px;
+    display:flex;
+    gap:10px;
+    justify-content:center;
+  }
+  button{
+    font-family:inherit;
+    border:none;
+    border-radius:3px;
+    padding:12px 22px;
+    font-size:.95rem;
+    font-weight:600;
+    cursor:pointer;
+  }
+  #submit-btn{ background:var(--pine); color:#fff; }
+  #submit-btn:hover{ background:var(--pine-deep); }
+  #submit-btn:disabled{ background:#a9b3a3; cursor:not-allowed; }
+  #retry-btn{ background:transparent; color:var(--pine-deep); border:1.5px solid var(--pine-deep); }
+
+  .result-banner{
+    display:none;
+    text-align:center;
+    padding:18px;
+    border-radius:3px;
+    margin-bottom:18px;
+    font-family:inherit;
+  }
+  .result-banner.show{ display:block; }
+  .result-banner .score{
+    font-family:Georgia,serif;
+    font-size:2.4rem;
+    font-weight:700;
+    color:var(--pine-deep);
+  }
+  .result-banner .score small{
+    font-size:1rem;
+    font-family:inherit;
+    color:var(--ink-soft);
+  }
+  .by-area{
+    margin-top:12px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    justify-content:center;
+    font-size:.78rem;
+  }
+  .by-area span{
+    background:#eef2e6;
+    padding:3px 9px;
+    border-radius:12px;
+    color:var(--pine-deep);
+  }
+
+  footer{
+    text-align:center;
+    font-family:inherit;
+    font-size:.75rem;
+    color:var(--ink-soft);
+    padding:20px;
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="ui eyebrow">Ciclo 2026–2028 · Treino cronometrado opcional</div>
+  <h1>Simulado de Treino — Seriado UFMG</h1>
+  <div class="ui sub">15 questões · Linguagens, Matemática, Ciências da Natureza e Ciências Humanas</div>
+</header>
+
+<main>
+
+  <div class="timer-badge ui" id="timer-badge"></div>
+
+  <div class="panel ui">
+    <div class="history-row">
+      <div class="stat">
+        <div class="num" id="stat-last">—</div>
+        <div class="lbl">última nota</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="stat-best">—</div>
+        <div class="lbl">melhor nota</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="stat-count">0</div>
+        <div class="lbl">tentativas</div>
+      </div>
+    </div>
+    <div id="history-list"></div>
+  </div>
+
+  <div class="integrity-banner ui" id="integrity-banner">
+    🔎 Monitoramento de foco está ativo nesta prova: o sistema registra se você trocar de aba,
+    sair da janela com o mouse ou tentar copiar o enunciado. Isso é um indicador para revisão
+    humana — não reprova ninguém automaticamente.
+  </div>
+
+  <div class="result-banner panel" id="result-banner">
+    <div class="score" id="result-score">0/15</div>
+    <div class="ui" style="color:var(--ink-soft); margin-top:4px;">registrado no histórico acima</div>
+    <div id="pass-badge-wrap"></div>
+    <div class="by-area" id="result-by-area"></div>
+    <div class="integrity-summary ui" id="integrity-summary"></div>
+  </div>
+
+  <form id="quiz-form"></form>
+
+  <div class="actions">
+    <button type="button" id="submit-btn" class="ui">Corrigir simulado</button>
+    <button type="button" id="retry-btn" class="ui" style="display:none;">Refazer do zero</button>
+  </div>
+
+</main>
+
+<div class="warning-overlay ui" id="mouse-leave-warning">
+  <div class="warning-modal">
+    <div class="icon">⚠️</div>
+    <h3>Atenção</h3>
+    <p>
+      Detectamos que o mouse saiu da área da prova. Isso fica registrado e, em caso de
+      revisão, comportamentos suspeitos repetidos podem levar à desclassificação.
+      Continue normalmente se foi sem querer.
+    </p>
+    <button type="button" id="warning-ack-btn">Entendi, continuar</button>
+  </div>
+</div>
+
+<footer>Os dados ficam salvos só neste navegador/perfil, de forma privada.</footer>
+
+<script>
+const QUESTIONS = [
+  { area:"Linguagens", text:'Leia o trecho: "Ela não veio à festa. Estava, digamos, <i>ocupadíssima</i> com um compromisso importantíssimo: dormir." O efeito de sentido do sufixo em "ocupadíssima" é de', options:[
+    "Intensificação literal do grau de ocupação.",
+    "Ironia, pois contrasta com o compromisso citado a seguir.",
+    "Neutralidade, sem carga avaliativa.",
+    "Formalidade excessiva do discurso."
+  ], correct:1, explain:'O sufixo superlativo é usado ironicamente: o "compromisso importantíssimo" é dormir, contrariando a expectativa criada pela palavra.' },
+
+  { area:"Linguagens", text:'"Não se pode negar que a tecnologia trouxe avanços; porém, também ampliou desigualdades." O conectivo "porém" estabelece uma relação de', options:[
+    "Adição","Conclusão","Oposição","Causa"
+  ], correct:2, explain:'"Porém" é conjunção adversativa: marca oposição entre os avanços e as desigualdades citadas.' },
+
+  { area:"Linguagens", text:"Qual alternativa apresenta um exemplo de conotação (sentido figurado)?", options:[
+    '"O sol nasce às 6h."','"Ele tem um coração de pedra."','"A água ferve a 100°C."','"O ônibus atrasou dez minutos."'
+  ], correct:1, explain:'"Coração de pedra" é metáfora — sentido figurado. As demais são afirmações literais (denotação).' },
+
+  { area:"Linguagens", text:'(Inglês) "I\'ve been trying to call you all day, but you never answer." O tempo verbal "have been trying" indica uma ação que', options:[
+    "Aconteceu uma única vez, no passado distante.",
+    "Vai acontecer no futuro.",
+    "Começou no passado e continua, repetidamente, até agora.",
+    "É um hábito simples, sem referência temporal."
+  ], correct:2, explain:"Present perfect continuous indica ação iniciada no passado que se repete/continua até o momento presente." },
+
+  { area:"Linguagens", text:"A charge se diferencia do cartum principalmente porque", options:[
+    "a charge refere-se a um fato específico e atual, geralmente político; o cartum trata de temas universais e atemporais.",
+    "a charge nunca usa humor; o cartum sempre usa humor.",
+    "a charge é exclusivamente verbal; o cartum é exclusivamente visual.",
+    "não há diferença relevante entre os dois gêneros."
+  ], correct:0, explain:"Charge está ligada a um fato atual e específico (frequentemente político); cartum trata de temas universais, sem data marcada." },
+
+  { area:"Matemática", text:"Em uma turma de 40 alunos, 22 fazem inglês, 18 fazem espanhol e 8 fazem os dois idiomas. Quantos alunos não fazem nenhum dos dois?", options:[
+    "6","8","10","12"
+  ], correct:1, explain:"Só inglês = 22-8 = 14; só espanhol = 18-8 = 10; os dois = 8. Total com pelo menos um idioma = 32. Sem nenhum = 40-32 = 8." },
+
+  { area:"Matemática", text:"Um evento acontece a cada 6 dias, outro a cada 15 dias. Se aconteceram juntos hoje, em quantos dias voltarão a acontecer juntos?", options:[
+    "21","30","45","90"
+  ], correct:1, explain:"MMC(6,15) = 30." },
+
+  { area:"Matemática", text:"Duas retas paralelas são cortadas por uma transversal. Um ângulo mede 70°. O ângulo colateral interno a ele mede", options:[
+    "70°","90°","110°","180°"
+  ], correct:2, explain:"Ângulos colaterais internos são suplementares: 180 - 70 = 110°." },
+
+  { area:"Ciências da Natureza", text:"Sobre a respiração celular, é correto afirmar que", options:[
+    "ocorre inteiramente no citoplasma, sem participação de organelas.",
+    "a glicólise ocorre no citoplasma, e as demais etapas ocorrem na mitocôndria.",
+    "não depende de oxigênio em nenhuma etapa.",
+    "produz apenas CO₂, sem geração de ATP."
+  ], correct:1, explain:"Glicólise é citoplasmática; ciclo de Krebs e cadeia respiratória ocorrem na mitocôndria." },
+
+  { area:"Ciências da Natureza", text:"No modelo atômico de Rutherford-Bohr, os elétrons", options:[
+    "ficam distribuídos uniformemente dentro de uma esfera de carga positiva.",
+    "ocupam níveis discretos (quantizados) de energia ao redor do núcleo.",
+    "não têm relação com a emissão de luz pelos átomos.",
+    "perdem energia continuamente até colidir com o núcleo."
+  ], correct:1, explain:"Postulado central de Bohr: níveis quantizados de energia, correção ao modelo de Rutherford." },
+
+  { area:"Ciências da Natureza", text:"Um corpo é abandonado em queda livre (sem resistência do ar) a partir do repouso. Após 2 s, considerando g = 10 m/s², sua velocidade é de", options:[
+    "5 m/s","10 m/s","20 m/s","40 m/s"
+  ], correct:2, explain:"v = g·t = 10 × 2 = 20 m/s." },
+
+  { area:"Ciências da Natureza", text:"Em uma cadeia alimentar, a relação entre um leão e uma zebra é classificada como", options:[
+    "Mutualismo","Predatismo","Comensalismo","Competição intraespecífica"
+  ], correct:1, explain:"Predatismo (ou predação): uma espécie caça e se alimenta de outra." },
+
+  { area:"Ciências Humanas", text:"A democracia ateniense clássica é frequentemente criticada por historiadores porque", options:[
+    "incluía toda a população residente em Atenas, sem exceções.",
+    "excluía mulheres, estrangeiros e escravizados da cidadania plena.",
+    "não permitia que os cidadãos votassem diretamente nas leis.",
+    "era uma democracia representativa, semelhante à atual."
+  ], correct:1, explain:"A cidadania ateniense era restrita a homens livres, adultos, nascidos de pai ateniense — excluía mulheres, estrangeiros e escravizados." },
+
+  { area:"Ciências Humanas", text:"Sobre a crise do feudalismo europeu na Baixa Idade Média, é correto afirmar que", options:[
+    "o crescimento do comércio e das feiras favoreceu o surgimento dos burgos e de uma nova classe social, a burguesia.",
+    "o comércio foi irrelevante para as mudanças sociais desse período.",
+    "a mobilidade social já era ampla desde o início do sistema feudal.",
+    "as cidades medievais surgiram isoladas das rotas comerciais."
+  ], correct:0, explain:"O renascimento comercial e as feiras geraram os burgos e uma nova classe social ligada ao comércio (burguesia)." },
+
+  { area:"Ciências Humanas", text:"Para Durkheim, um fato social se caracteriza principalmente por ser", options:[
+    "uma escolha livre e exclusivamente individual.",
+    "exterior ao indivíduo e dotado de força coercitiva sobre ele.",
+    "um fenômeno biológico, não social.",
+    "algo sem qualquer generalidade dentro da sociedade."
+  ], correct:1, explain:"Definição clássica de Durkheim: exterioridade + coercitividade + generalidade social." }
+];
+
+const SIMULADO_ID = "treino-15q-v1";
+const LETTERS = ["A","B","C","D"];
+let answers = new Array(QUESTIONS.length).fill(null);
+let graded = false;
+
+// --- Configuração da prova (equivalente aos campos exams.* do backend) ---
+const EXAM_CONFIG = {
+  passingScorePercent: 60,     // null para não exigir nota mínima
+  timeLimitMinutes: 20,        // null para prova sem limite de tempo (infinita)
+  antiCheatEnabled: true,      // registra sinais, nunca reprova sozinho
+  copyProtectionEnabled: true, // dificulta cópia casual; não bloqueia print/screenshot
+};
+
+const integrity = { tab_switches: 0, paste_attempts: 0, copy_attempts: 0, mouse_leaves: 0 };
+const auditEvents = []; // log detalhado com timestamp — é o que iria pro POST /api/attempts/<id>/audit
+let mouseLeaveWarned = false;
+let startedAt = Date.now();
+let timerInterval = null;
+
+function logAuditEvent(type, meta = {}){
+  auditEvents.push({ type, occurred_at: new Date().toISOString(), meta });
+}
+
+const form = document.getElementById("quiz-form");
+
+// --- Proteção de cópia (best-effort — não é DRM real: view-source e
+// screenshots continuam possíveis, mas isso já evita cópia casual) ---
+function setupCopyProtection(){
+  if (!EXAM_CONFIG.copyProtectionEnabled) return;
+  document.body.classList.add("no-select");
+  const block = (evtName, counterKey) => {
+    document.addEventListener(evtName, (e) => {
+      if (!graded){
+        e.preventDefault();
+        if (counterKey){
+          integrity[counterKey]++;
+          logAuditEvent(evtName === "cut" ? "cut_attempt" : "copy_attempt");
+        }
+      }
+    });
+  };
+  block("copy", "copy_attempts");
+  block("cut", "copy_attempts");
+  block("contextmenu", null);
+  document.addEventListener("keydown", (e) => {
+    const blocked = (e.ctrlKey || e.metaKey) && ["c","x","u","s","p"].includes(e.key.toLowerCase());
+    if (blocked && !graded) e.preventDefault();
+  });
+}
+
+// --- Monitoramento de foco (indicador informativo, não punitivo por si só) ---
+function setupFocusMonitoring(){
+  if (!EXAM_CONFIG.antiCheatEnabled) return;
+  document.getElementById("integrity-banner").classList.add("show");
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && !graded){
+      integrity.tab_switches++;
+      logAuditEvent("tab_switch");
+    }
+  });
+
+  // "Mouse saiu da área do sistema" — dispara quando o cursor sai da janela/viewport.
+  document.addEventListener("mouseleave", () => {
+    if (graded) return;
+    integrity.mouse_leaves++;
+    logAuditEvent("mouse_leave");
+    if (!mouseLeaveWarned){
+      mouseLeaveWarned = true;
+      document.getElementById("mouse-leave-warning").classList.add("show");
+    }
+  });
+}
+
+document.getElementById("warning-ack-btn").addEventListener("click", () => {
+  document.getElementById("mouse-leave-warning").classList.remove("show");
+});
+
+// --- Cronômetro (tempo limite da prova, se houver) ---
+function formatClock(totalSeconds){
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m}:${String(s).padStart(2,"0")}`;
+}
+
+function setupTimer(){
+  const badge = document.getElementById("timer-badge");
+  if (EXAM_CONFIG.timeLimitMinutes === null){
+    badge.classList.add("show");
+    badge.textContent = "⏱ Prova sem limite de tempo";
+    return;
+  }
+  badge.classList.add("show");
+  const deadline = startedAt + EXAM_CONFIG.timeLimitMinutes * 60 * 1000;
+
+  const tick = () => {
+    if (graded){ clearInterval(timerInterval); return; }
+    const remainingMs = deadline - Date.now();
+    const remainingSec = Math.max(0, Math.floor(remainingMs / 1000));
+    badge.textContent = `⏱ Tempo restante: ${formatClock(remainingSec)}`;
+    badge.classList.toggle("low-time", remainingSec <= 60);
+    if (remainingMs <= 0){
+      clearInterval(timerInterval);
+      badge.textContent = "⏱ Tempo esgotado — enviando automaticamente...";
+      autoSubmitOnTimeout();
+    }
+  };
+  tick();
+  timerInterval = setInterval(tick, 1000);
+}
+
+function autoSubmitOnTimeout(){
+  if (graded) return;
+  // Preenche o que faltou como "não respondido" e corrige normalmente —
+  // o sinalizador de "late" fica registrado, não é punição automática.
+  gradeQuiz();
+}
+
+function renderQuiz(){
+  form.innerHTML = "";
+  QUESTIONS.forEach((q, qi) => {
+    const card = document.createElement("div");
+    card.className = "panel qcard";
+    card.innerHTML = `
+      <span class="qnum ui">Questão ${qi+1} · ${q.area}</span>
+      <div class="qtext">${q.text}</div>
+      <div class="opts" data-qi="${qi}"></div>
+      <div class="explain ui" data-qi="${qi}"></div>
+    `;
+    const optsWrap = card.querySelector(".opts");
+    q.options.forEach((opt, oi) => {
+      const row = document.createElement("label");
+      row.className = "opt ui";
+      row.dataset.qi = qi;
+      row.dataset.oi = oi;
+      row.innerHTML = `<input type="radio" name="q${qi}" value="${oi}"><span><span class="letter">${LETTERS[oi]})</span> ${opt}</span>`;
+      row.addEventListener("click", () => {
+        if (graded) return;
+        answers[qi] = oi;
+        optsWrap.querySelectorAll(".opt").forEach(o => o.classList.remove("selected"));
+        row.classList.add("selected");
+      });
+      optsWrap.appendChild(row);
+    });
+    form.appendChild(card);
+  });
+}
+
+function gradeQuiz(){
+  let score = 0;
+  const byArea = {};
+  QUESTIONS.forEach((q, qi) => {
+    const chosen = answers[qi];
+    const isCorrect = chosen === q.correct;
+    if (isCorrect) score++;
+    byArea[q.area] = byArea[q.area] || {right:0, total:0};
+    byArea[q.area].total++;
+    if (isCorrect) byArea[q.area].right++;
+
+    const optsWrap = form.querySelector(`.opts[data-qi="${qi}"]`);
+    optsWrap.querySelectorAll(".opt").forEach(row => {
+      const oi = parseInt(row.dataset.oi);
+      row.style.pointerEvents = "none";
+      if (oi === q.correct) row.classList.add("correct");
+      else if (oi === chosen && !isCorrect) row.classList.add("incorrect");
+    });
+    const exp = form.querySelector(`.explain[data-qi="${qi}"]`);
+    exp.textContent = q.explain;
+    exp.classList.add("show");
+  });
+
+  graded = true;
+  clearInterval(timerInterval);
+  document.getElementById("submit-btn").style.display = "none";
+  document.getElementById("retry-btn").style.display = "inline-block";
+
+  const total = QUESTIONS.length;
+  const percent = (score / total) * 100;
+  let passed = null;
+  if (EXAM_CONFIG.passingScorePercent !== null){
+    passed = percent >= EXAM_CONFIG.passingScorePercent;
+  }
+  const late = EXAM_CONFIG.timeLimitMinutes !== null &&
+    (Date.now() - startedAt) > EXAM_CONFIG.timeLimitMinutes * 60 * 1000;
+
+  const banner = document.getElementById("result-banner");
+  banner.classList.add("show");
+  document.getElementById("result-score").textContent = `${score}/${QUESTIONS.length}`;
+  const areaWrap = document.getElementById("result-by-area");
+  areaWrap.innerHTML = Object.entries(byArea).map(([area,v]) =>
+    `<span>${area}: ${v.right}/${v.total}</span>`).join("");
+
+  const badgeWrap = document.getElementById("pass-badge-wrap");
+  let badgeHtml = "";
+  if (passed !== null){
+    badgeHtml += passed
+      ? `<span class="pass-badge pass ui">✓ Aprovado — nota mínima ${EXAM_CONFIG.passingScorePercent}%</span>`
+      : `<span class="pass-badge fail ui">Abaixo da nota mínima (${EXAM_CONFIG.passingScorePercent}%)</span>`;
+  }
+  if (late){
+    badgeHtml += ` <span class="pass-badge fail ui">Enviado após o tempo limite</span>`;
+  }
+  badgeWrap.innerHTML = badgeHtml;
+
+  const integritySummary = document.getElementById("integrity-summary");
+  if (EXAM_CONFIG.antiCheatEnabled || EXAM_CONFIG.copyProtectionEnabled){
+    const parts = [];
+    if (EXAM_CONFIG.antiCheatEnabled){
+      parts.push(`trocas de aba: ${integrity.tab_switches}`);
+      parts.push(`mouse fora da área: ${integrity.mouse_leaves}`);
+    }
+    if (EXAM_CONFIG.copyProtectionEnabled) parts.push(`tentativas de copiar: ${integrity.copy_attempts}`);
+    integritySummary.textContent = `Indicadores (apenas informativos, sujeitos a revisão humana) — ${parts.join(" · ")}`;
+  }
+
+  saveAttempt(score, passed, late);
+}
+
+async function saveAttempt(score, passed, late){
+  let attempts = [];
+  try{
+    const res = await window.storage.get("attempts_" + SIMULADO_ID);
+    if (res && res.value) attempts = JSON.parse(res.value);
+  }catch(e){ attempts = []; }
+  attempts.push({
+    date: new Date().toISOString(),
+    score,
+    total: QUESTIONS.length,
+    passed,
+    late,
+    integrity: { ...integrity },
+    // Em produção, "auditEvents" iria num POST separado para
+    // /api/attempts/<attempt_id>/audit assim que a prova terminasse.
+    auditEventsCount: auditEvents.length,
+  });
+  try{
+    await window.storage.set("attempts_" + SIMULADO_ID, JSON.stringify(attempts));
+  }catch(e){ console.error("Não foi possível salvar o histórico", e); }
+  renderHistory(attempts);
+}
+
+function fmtDate(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString("pt-BR", {day:"2-digit", month:"2-digit", year:"2-digit"}) +
+         " " + d.toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
+}
+
+function renderHistory(attempts){
+  document.getElementById("stat-count").textContent = attempts.length;
+  if (attempts.length === 0){
+    document.getElementById("stat-last").textContent = "—";
+    document.getElementById("stat-best").textContent = "—";
+    document.getElementById("history-list").innerHTML =
+      '<div class="attempt-line ui">Nenhuma tentativa registrada ainda.</div>';
+    return;
+  }
+  const last = attempts[attempts.length - 1];
+  const best = attempts.reduce((a,b) => b.score > a.score ? b : a, attempts[0]);
+  document.getElementById("stat-last").textContent = `${last.score}/${last.total}`;
+  document.getElementById("stat-best").textContent = `${best.score}/${best.total}`;
+
+  const list = document.getElementById("history-list");
+  list.innerHTML = attempts.slice().reverse().slice(0,8).map(a => {
+    const passTag = a.passed === true ? ' <span style="color:var(--right)">✓</span>'
+                   : a.passed === false ? ' <span style="color:var(--wrong)">✗</span>' : '';
+    return `<div class="attempt-line"><span>${fmtDate(a.date)}</span><b>${a.score}/${a.total}${passTag}</b></div>`;
+  }).join("");
+}
+
+async function loadHistory(){
+  try{
+    const res = await window.storage.get("attempts_" + SIMULADO_ID);
+    const attempts = res && res.value ? JSON.parse(res.value) : [];
+    renderHistory(attempts);
+  }catch(e){
+    renderHistory([]);
+  }
+}
+
+document.getElementById("submit-btn").addEventListener("click", () => {
+  if (answers.includes(null)){
+    const missing = answers.findIndex(a => a === null) + 1;
+    alert(`Ainda falta responder a questão ${missing}.`);
+    return;
+  }
+  gradeQuiz();
+});
+
+document.getElementById("retry-btn").addEventListener("click", () => {
+  answers = new Array(QUESTIONS.length).fill(null);
+  graded = false;
+  integrity.tab_switches = 0;
+  integrity.paste_attempts = 0;
+  integrity.copy_attempts = 0;
+  integrity.mouse_leaves = 0;
+  auditEvents.length = 0;
+  mouseLeaveWarned = false;
+  startedAt = Date.now();
+  document.getElementById("submit-btn").style.display = "inline-block";
+  document.getElementById("retry-btn").style.display = "none";
+  document.getElementById("result-banner").classList.remove("show");
+  renderQuiz();
+  setupTimer();
+  window.scrollTo({top:0, behavior:"smooth"});
+});
+
+renderQuiz();
+loadHistory();
+setupCopyProtection();
+setupFocusMonitoring();
+setupTimer();
+</script>
+
+</body>
+</html>

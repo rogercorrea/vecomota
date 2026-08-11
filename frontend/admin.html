@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Plataforma de Simulados</title>
+<style>
+  :root{
+    --paper:#f5f2ea;
+    --paper-line:#e3ddc9;
+    --ink:#20281f;
+    --ink-soft:#5b6357;
+    --pine:#2f5233;
+    --pine-deep:#1e3a21;
+    --gold:#b08a2e;
+    --gold-deep:#8a6a1f;
+    --wrong:#9a3324;
+    --right:#2f6b3a;
+    --card:#fffdf7;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+    line-height:1.5;
+  }
+  header.top{
+    background:var(--ink);
+    color:#f2ede0;
+    padding:20px 24px;
+    border-bottom:4px solid var(--gold);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  header.top h1{ margin:0; font-size:1.3rem; }
+  header.top .eyebrow{
+    text-transform:uppercase; letter-spacing:.12em; font-size:.68rem; color:#c9c2a8;
+  }
+  #user-box{ font-size:.85rem; display:flex; align-items:center; gap:10px; }
+  #user-box img{ width:28px; height:28px; border-radius:50%; }
+  a.btn, button{
+    font-family:inherit; border:none; border-radius:3px; padding:9px 16px;
+    font-size:.88rem; font-weight:600; cursor:pointer; text-decoration:none; display:inline-block;
+  }
+  .btn-primary{ background:var(--gold); color:#2a2110; }
+  .btn-primary:hover{ background:var(--gold-deep); }
+  .btn-ghost{ background:transparent; color:#f2ede0; border:1px solid #6b6350; }
+  .btn-danger{ background:#f5e6e1; color:var(--wrong); }
+  .btn-secondary{ background:#eef2e6; color:var(--pine-deep); }
+
+  main{ max-width:920px; margin:0 auto; padding:24px 18px 60px; }
+  .panel{
+    background:var(--card); border:1px solid var(--paper-line); border-radius:3px;
+    padding:20px 22px; margin-bottom:20px;
+  }
+  .panel h2{ margin-top:0; font-size:1.05rem; }
+  .hint{ color:var(--ink-soft); font-size:.85rem; margin-top:-6px; margin-bottom:14px; }
+
+  textarea{
+    width:100%; min-height:220px; font-family:"SFMono-Regular",Menlo,monospace;
+    font-size:.82rem; border:1px solid var(--paper-line); border-radius:3px; padding:12px;
+    background:#fffef9; color:var(--ink);
+  }
+  .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px; }
+
+  .msg{ margin-top:12px; padding:10px 14px; border-radius:3px; font-size:.85rem; display:none; }
+  .msg.show{ display:block; }
+  .msg.ok{ background:#e6f2e4; color:var(--right); border:1px solid var(--right); }
+  .msg.error{ background:#f5e6e1; color:var(--wrong); border:1px solid var(--wrong); }
+  .msg ul{ margin:6px 0 0; padding-left:18px; }
+
+  table{ width:100%; border-collapse:collapse; font-size:.85rem; }
+  th, td{ text-align:left; padding:8px 10px; border-bottom:1px solid var(--paper-line); }
+  th{ color:var(--ink-soft); font-weight:600; text-transform:uppercase; font-size:.7rem; letter-spacing:.05em; }
+  .badge{
+    display:inline-block; font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:10px;
+  }
+  .badge.public{ background:#e6f2e4; color:var(--right); }
+  .badge.hidden{ background:#eee; color:var(--ink-soft); }
+  td.actions{ white-space:nowrap; }
+  td.actions button{ padding:5px 10px; font-size:.78rem; margin-right:6px; }
+
+  #locked{ text-align:center; padding:60px 20px; }
+  #locked.hide, #app.hide{ display:none; }
+
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(20,15,5,.55);
+    z-index:50; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.show{ display:flex; }
+  .modal-box{
+    background:var(--card); border-radius:4px; max-width:760px; width:100%;
+    max-height:82vh; overflow:auto; padding:22px 24px;
+  }
+  .modal-box .close-row{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .modal-box table{ font-size:.78rem; }
+  .cell-pct{ font-weight:700; }
+  .cell-pct.good{ color:var(--right); }
+  .cell-pct.bad{ color:var(--wrong); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <div class="eyebrow">Área restrita</div>
+    <h1>Admin — Plataforma de Simulados</h1>
+  </div>
+  <div id="user-box"></div>
+</header>
+
+<main>
+
+  <div id="locked" class="panel hide">
+    <h2>Acesso restrito</h2>
+    <p class="hint">Entre com uma conta Google autorizada como administradora para gerenciar o conteúdo.</p>
+    <a class="btn btn-primary" href="/api/auth/google/login">Entrar com Google</a>
+  </div>
+
+  <div id="app" class="hide">
+
+    <div class="panel">
+      <h2>Importar provas (JSON padrão)</h2>
+      <p class="hint">
+        Cole o JSON ou selecione um arquivo. Aceita uma prova única ou um lote com
+        <code>"exams": [...]</code> — inclusive várias versões de idioma da mesma prova,
+        cada uma com seu próprio <code>"language"</code>.
+      </p>
+      <textarea id="import-textarea" placeholder='{"exams": [ { "exam_type": "...", "title": "...", "language": "pt-BR", "questions": [...] } ]}'></textarea>
+      <div class="row">
+        <input type="file" id="file-input" accept=".json">
+        <button class="btn-secondary" id="load-example-btn">Carregar exemplo</button>
+        <button class="btn-primary" id="import-btn">Importar</button>
+      </div>
+      <div class="msg" id="import-msg"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Novo tipo de prova</h2>
+      <p class="hint">Categorias já existem para Seriado UFMG, ENEM, Concursos, Inglês e TI — crie outras aqui se precisar.</p>
+      <div class="row">
+        <input type="text" id="type-slug" placeholder="slug (ex: vestibular_usp)" style="padding:8px; border:1px solid var(--paper-line); border-radius:3px;">
+        <input type="text" id="type-name" placeholder="Nome de exibição (ex: Vestibular USP)" style="padding:8px; border:1px solid var(--paper-line); border-radius:3px; flex:1; min-width:200px;">
+        <button class="btn-primary" id="create-type-btn">Criar tipo</button>
+      </div>
+      <div class="msg" id="type-msg"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Provas cadastradas</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Título</th><th>Dono</th><th>Tipo</th><th>Idioma</th><th>Questões</th><th>Nota mín.</th><th>Tempo</th><th>Visível</th><th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="exams-tbody"></tbody>
+      </table>
+    </div>
+
+  </div>
+</main>
+
+<div class="modal-overlay" id="report-modal">
+  <div class="modal-box">
+    <div class="close-row">
+      <h2 id="report-title" style="margin:0;">Relatório</h2>
+      <button class="btn-secondary" id="report-close-btn">Fechar</button>
+    </div>
+    <div id="report-body"></div>
+  </div>
+</div>
+
+<script>
+const EXAMPLE_IMPORT_URL = "example_import.json"; // ajuste o caminho se hospedar em outro lugar
+
+async function api(path, options = {}){
+  const res = await fetch(path, { credentials: "include", ...options });
+  let data = null;
+  try { data = await res.json(); } catch(e) { /* sem corpo */ }
+  return { ok: res.ok, status: res.status, data };
+}
+
+function showMsg(elId, kind, text, list){
+  const el = document.getElementById(elId);
+  el.className = `msg show ${kind}`;
+  let html = text;
+  if (list && list.length){
+    html += "<ul>" + list.map(x => `<li>${x}</li>`).join("") + "</ul>";
+  }
+  el.innerHTML = html;
+}
+
+async function checkAuth(){
+  const me = await api("/api/me");
+  if (!me.ok || !me.data){
+    document.getElementById("locked").classList.remove("hide");
+    return;
+  }
+  if (!me.data.is_admin){
+    document.getElementById("locked").classList.remove("hide");
+    document.getElementById("locked").innerHTML =
+      `<h2>Sem permissão de admin</h2><p class="hint">Você está logada como ${me.data.email}, mas essa conta não tem acesso à área de administração.</p>
+       <a class="btn btn-secondary" href="/api/auth/logout">Trocar de conta</a>`;
+    return;
+  }
+  document.getElementById("app").classList.remove("hide");
+  document.getElementById("user-box").innerHTML = `
+    <img src="${me.data.avatar_url || ''}" alt="">
+    <span>${me.data.name || me.data.email}</span>
+    <a class="btn btn-ghost" href="/api/auth/logout">Sair</a>
+  `;
+  loadExams();
+}
+
+document.getElementById("file-input").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => { document.getElementById("import-textarea").value = reader.result; };
+  reader.readAsText(file);
+});
+
+document.getElementById("load-example-btn").addEventListener("click", async () => {
+  try{
+    const res = await fetch(EXAMPLE_IMPORT_URL);
+    document.getElementById("import-textarea").value = await res.text();
+  }catch(e){
+    showMsg("import-msg", "error", "Não achei o arquivo de exemplo — cole o JSON manualmente.");
+  }
+});
+
+document.getElementById("import-btn").addEventListener("click", async () => {
+  const raw = document.getElementById("import-textarea").value.trim();
+  let payload;
+  try{
+    payload = JSON.parse(raw);
+  }catch(e){
+    showMsg("import-msg", "error", "JSON inválido: " + e.message);
+    return;
+  }
+  const res = await api("/api/admin/exams/import", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (res.ok){
+    showMsg("import-msg", "ok", `Importado com sucesso — ${res.data.count} prova(s) criada(s).`);
+    loadExams();
+  } else {
+    showMsg("import-msg", "error", "Falha na importação:", res.data && res.data.details || [res.data && res.data.error || "erro desconhecido"]);
+  }
+});
+
+document.getElementById("create-type-btn").addEventListener("click", async () => {
+  const slug = document.getElementById("type-slug").value.trim();
+  const name = document.getElementById("type-name").value.trim();
+  if (!slug || !name){
+    showMsg("type-msg", "error", "Preencha slug e nome.");
+    return;
+  }
+  const res = await api("/api/admin/exam-types", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ slug, name }),
+  });
+  if (res.ok){
+    showMsg("type-msg", "ok", `Tipo "${res.data.name}" (${res.data.slug}) pronto para uso.`);
+    document.getElementById("type-slug").value = "";
+    document.getElementById("type-name").value = "";
+  } else {
+    showMsg("type-msg", "error", res.data && res.data.error || "erro desconhecido");
+  }
+});
+
+async function loadExams(){
+  const res = await api("/api/admin/exams");
+  const tbody = document.getElementById("exams-tbody");
+  if (!res.ok){
+    tbody.innerHTML = `<tr><td colspan="9">Não foi possível carregar as provas.</td></tr>`;
+    return;
+  }
+  if (res.data.length === 0){
+    tbody.innerHTML = `<tr><td colspan="9">Nenhuma prova cadastrada ainda.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = res.data.map(e => `
+    <tr data-id="${e.id}" data-title="${e.title}">
+      <td>${e.title}</td>
+      <td>${e.owner_name || e.owner_email}</td>
+      <td>${e.exam_type_name}</td>
+      <td>${e.language}</td>
+      <td>${e.question_count}</td>
+      <td>${e.passing_score_percent !== null ? e.passing_score_percent + "%" : "—"}</td>
+      <td>${e.time_limit_minutes !== null ? e.time_limit_minutes + " min" : "sem limite"}</td>
+      <td><span class="badge ${e.is_public ? "public" : "hidden"}">${e.is_public ? "pública" : "oculta"}</span></td>
+      <td class="actions">
+        <button class="btn-secondary toggle-btn">${e.is_public ? "Ocultar" : "Publicar"}</button>
+        <button class="btn-secondary copy-link-btn" data-token="${e.share_token}">Copiar link</button>
+        <button class="btn-secondary report-btn">Relatório</button>
+        <button class="btn-danger delete-btn">Excluir</button>
+      </td>
+    </tr>
+  `).join("");
+
+  tbody.querySelectorAll(".toggle-btn").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      const tr = e.target.closest("tr");
+      const id = tr.dataset.id;
+      const currentlyPublic = e.target.textContent.trim() === "Ocultar";
+      await api(`/api/exams/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_public: !currentlyPublic }),
+      });
+      loadExams();
+    });
+  });
+
+  tbody.querySelectorAll(".copy-link-btn").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      const url = `${location.origin}/api/exams/shared/${e.target.dataset.token}`;
+      try{
+        await navigator.clipboard.writeText(url);
+        e.target.textContent = "Copiado!";
+        setTimeout(() => { e.target.textContent = "Copiar link"; }, 1500);
+      }catch(err){
+        prompt("Copie o link:", url);
+      }
+    });
+  });
+
+  tbody.querySelectorAll(".report-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const tr = e.target.closest("tr");
+      openReport(tr.dataset.id, tr.dataset.title);
+    });
+  });
+
+  tbody.querySelectorAll(".delete-btn").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      const tr = e.target.closest("tr");
+      const id = tr.dataset.id;
+      const title = tr.dataset.title;
+      if (!confirm(`Excluir "${title}"? Isso também apaga o histórico de tentativas dessa prova. Não dá pra desfazer.`)) return;
+      await api(`/api/exams/${id}`, { method: "DELETE" });
+      loadExams();
+    });
+  });
+}
+
+function pctClass(correct, total){
+  if (total === 0) return "";
+  const pct = (correct / total) * 100;
+  return pct >= 60 ? "good" : "bad";
+}
+
+async function openReport(examId, title){
+  document.getElementById("report-title").textContent = `Relatório — ${title}`;
+  const body = document.getElementById("report-body");
+  body.innerHTML = "<p>Carregando...</p>";
+  document.getElementById("report-modal").classList.add("show");
+
+  const res = await api(`/api/exams/${examId}/reports`);
+  if (!res.ok || !res.data.results || res.data.results.length === 0){
+    body.innerHTML = "<p>Ainda não há tentativas finalizadas nessa prova.</p>";
+    return;
+  }
+
+  // Descobre o conjunto de categorias presentes (colunas da tabela)
+  const categoryMap = new Map();
+  res.data.results.forEach(r => r.by_category.forEach(c => categoryMap.set(c.category_id, c.category_name)));
+  const categories = [...categoryMap.entries()];
+
+  const header = `<tr><th>Pessoa</th><th>Nota geral</th>${categories.map(([,name]) => `<th>${name}</th>`).join("")}<th>Quando</th></tr>`;
+
+  const rows = res.data.results.map(r => {
+    const overallCls = pctClass(r.score, r.total);
+    const catCells = categories.map(([cid]) => {
+      const c = r.by_category.find(x => x.category_id === cid);
+      if (!c) return "<td>—</td>";
+      return `<td class="cell-pct ${pctClass(c.correct, c.total)}">${c.correct}/${c.total}</td>`;
+    }).join("");
+    const when = new Date(r.submitted_at).toLocaleString("pt-BR");
+    const passTag = r.passed === true ? " ✓" : r.passed === false ? " ✗" : "";
+    const lateTag = r.late ? " (atrasado)" : "";
+    return `<tr>
+      <td>${r.user.name || r.user.email}</td>
+      <td class="cell-pct ${overallCls}">${r.score}/${r.total}${passTag}${lateTag}</td>
+      ${catCells}
+      <td>${when}</td>
+    </tr>`;
+  }).join("");
+
+  body.innerHTML = `<table><thead>${header}</thead><tbody>${rows}</tbody></table>`;
+}
+
+document.getElementById("report-close-btn").addEventListener("click", () => {
+  document.getElementById("report-modal").classList.remove("show");
+});
+
+checkAuth();
+</script>
+
+</body>
+</html>

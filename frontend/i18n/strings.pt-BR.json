@@ -1,0 +1,20 @@
+{
+  "locale": "pt-BR",
+  "eyebrow": "Treino cronometrado opcional",
+  "app_title": "Simulados",
+  "subtitle_template": "{count} questões · {areas}",
+  "stat_last": "última nota",
+  "stat_best": "melhor nota",
+  "stat_count": "tentativas",
+  "no_attempts": "Nenhuma tentativa registrada ainda.",
+  "submit_button": "Corrigir simulado",
+  "retry_button": "Refazer do zero",
+  "missing_answer": "Ainda falta responder a questão {n}.",
+  "question_label": "Questão {n} · {area}",
+  "result_registered": "registrado no histórico acima",
+  "footer_privacy": "Os dados ficam salvos só neste navegador/perfil, de forma privada.",
+  "login_with_google": "Entrar com Google",
+  "logout": "Sair",
+  "language_selector_label": "Idioma da interface",
+  "exam_language_note": "Esta prova é em {language}."
+}

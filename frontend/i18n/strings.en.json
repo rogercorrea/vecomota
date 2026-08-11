@@ -1,0 +1,20 @@
+{
+  "locale": "en",
+  "eyebrow": "Optional timed practice",
+  "app_title": "Practice Exams",
+  "subtitle_template": "{count} questions · {areas}",
+  "stat_last": "last score",
+  "stat_best": "best score",
+  "stat_count": "attempts",
+  "no_attempts": "No attempts recorded yet.",
+  "submit_button": "Grade exam",
+  "retry_button": "Retry from scratch",
+  "missing_answer": "Question {n} still needs an answer.",
+  "question_label": "Question {n} · {area}",
+  "result_registered": "recorded in the history above",
+  "footer_privacy": "Data is saved privately, only in this browser/profile.",
+  "login_with_google": "Sign in with Google",
+  "logout": "Sign out",
+  "language_selector_label": "Interface language",
+  "exam_language_note": "This exam is in {language}."
+}

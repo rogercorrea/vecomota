@@ -1,0 +1,20 @@
+{
+  "locale": "es",
+  "eyebrow": "Práctica cronometrada opcional",
+  "app_title": "Simulacros",
+  "subtitle_template": "{count} preguntas · {areas}",
+  "stat_last": "última nota",
+  "stat_best": "mejor nota",
+  "stat_count": "intentos",
+  "no_attempts": "Todavía no hay intentos registrados.",
+  "submit_button": "Corregir simulacro",
+  "retry_button": "Repetir desde cero",
+  "missing_answer": "Todavía falta responder la pregunta {n}.",
+  "question_label": "Pregunta {n} · {area}",
+  "result_registered": "registrado en el historial de arriba",
+  "footer_privacy": "Los datos se guardan de forma privada, solo en este navegador/perfil.",
+  "login_with_google": "Iniciar sesión con Google",
+  "logout": "Cerrar sesión",
+  "language_selector_label": "Idioma de la interfaz",
+  "exam_language_note": "Este simulacro está en {language}."
+}

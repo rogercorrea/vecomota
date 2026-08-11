@@ -1,0 +1,190 @@
+{
+  "exams": [
+    {
+      "exam_type": "ingles",
+      "title": "Grammar Quiz — Verb Tenses",
+      "description": "3 questions on present perfect and simple past.",
+      "language": "en",
+      "passing_score_percent": 60,
+      "time_limit_minutes": 20,
+      "anti_cheat_enabled": false,
+      "copy_protection_enabled": false,
+      "questions": [
+        {
+          "category": "Grammar",
+          "question_text": "Choose the correct sentence:",
+          "explanation": "Present perfect ('have lived') is used for an action that started in the past and continues now.",
+          "options": [
+            {
+              "label": "A",
+              "text": "I live here since 2020.",
+              "correct": false
+            },
+            {
+              "label": "B",
+              "text": "I have lived here since 2020.",
+              "correct": true
+            },
+            {
+              "label": "C",
+              "text": "I am living here since 2020.",
+              "correct": false
+            },
+            {
+              "label": "D",
+              "text": "I lived here since 2020.",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "category": "Grammar",
+          "question_text": "\"She ___ to Paris last year.\" Fill in the blank:",
+          "explanation": "Simple past ('went') is used for a completed action at a specific past time ('last year').",
+          "options": [
+            {
+              "label": "A",
+              "text": "has gone",
+              "correct": false
+            },
+            {
+              "label": "B",
+              "text": "goes",
+              "correct": false
+            },
+            {
+              "label": "C",
+              "text": "went",
+              "correct": true
+            },
+            {
+              "label": "D",
+              "text": "was going",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "category": "Vocabulary",
+          "question_text": "Which word means \"very tired\"?",
+          "explanation": "\"Exhausted\" means extremely tired.",
+          "options": [
+            {
+              "label": "A",
+              "text": "Exhausted",
+              "correct": true
+            },
+            {
+              "label": "B",
+              "text": "Excited",
+              "correct": false
+            },
+            {
+              "label": "C",
+              "text": "Confused",
+              "correct": false
+            },
+            {
+              "label": "D",
+              "text": "Bored",
+              "correct": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "exam_type": "ti",
+      "title": "Simulado de TI — Fundamentos",
+      "description": "Exemplo de prova com categorias de TI (Windows, Segurança).",
+      "language": "pt-BR",
+      "passing_score_percent": 60,
+      "time_limit_minutes": 30,
+      "anti_cheat_enabled": true,
+      "copy_protection_enabled": true,
+      "questions": [
+        {
+          "category": "Windows",
+          "question_text": "Qual atalho de teclado abre o Gerenciador de Tarefas no Windows?",
+          "explanation": "Ctrl+Shift+Esc abre o Gerenciador de Tarefas diretamente, sem passar por outra tela.",
+          "options": [
+            {
+              "label": "A",
+              "text": "Ctrl+Alt+Delete",
+              "correct": false
+            },
+            {
+              "label": "B",
+              "text": "Ctrl+Shift+Esc",
+              "correct": true
+            },
+            {
+              "label": "C",
+              "text": "Alt+F4",
+              "correct": false
+            },
+            {
+              "label": "D",
+              "text": "Win+R",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "category": "Segurança",
+          "question_text": "O que caracteriza um ataque de phishing?",
+          "explanation": "Phishing é a tentativa de enganar a vítima para que ela mesma forneça dados sensíveis, geralmente via um link ou mensagem falsa.",
+          "options": [
+            {
+              "label": "A",
+              "text": "Sobrecarregar um servidor com requisições até ele parar.",
+              "correct": false
+            },
+            {
+              "label": "B",
+              "text": "Enganar a vítima para que ela forneça dados sensíveis voluntariamente.",
+              "correct": true
+            },
+            {
+              "label": "C",
+              "text": "Interceptar fisicamente um cabo de rede.",
+              "correct": false
+            },
+            {
+              "label": "D",
+              "text": "Explorar uma falha de hardware do processador.",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "category": "Segurança",
+          "question_text": "Autenticação de dois fatores (2FA) tem como principal objetivo:",
+          "explanation": "2FA exige uma segunda prova de identidade (algo que você tem/é), reduzindo o risco de uma senha vazada ser suficiente para invadir a conta.",
+          "options": [
+            {
+              "label": "A",
+              "text": "Acelerar o processo de login.",
+              "correct": false
+            },
+            {
+              "label": "B",
+              "text": "Substituir a necessidade de senha.",
+              "correct": false
+            },
+            {
+              "label": "C",
+              "text": "Adicionar uma segunda camada de verificação além da senha.",
+              "correct": true
+            },
+            {
+              "label": "D",
+              "text": "Criptografar o disco rígido automaticamente.",
+              "correct": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
