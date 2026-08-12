@@ -26,7 +26,7 @@ function pctClass(correct, total) {
 }
 
 async function copyShareLink(token, btnEl) {
-  const url = `${location.origin}/api/exams/shared/${token}`;
+  const url = `${location.origin}/simulado-interativo.html?token=${token}`;
   try {
     await navigator.clipboard.writeText(url);
     const original = btnEl.textContent;
