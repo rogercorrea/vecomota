@@ -84,6 +84,59 @@ obrigatoriamente vinculada a uma categoria.
    Qualquer usuário (admin ou não) também pode criar a própria prova direto pela
    API — ver seção "Minhas provas" abaixo.
 
+## Deploy na Railway
+
+A Railway **não roda `docker-compose.yml`** — cada serviço é configurado
+separadamente. O `railway.toml` na raiz do repositório já resolve a parte do
+build (aponta pro `backend/Dockerfile`, buildado a partir da raiz pra
+conseguir empacotar o `frontend/` junto). Falta configurar o resto pelo painel:
+
+1. **Criar o projeto** apontando pro repositório do GitHub (Railway detecta o
+   `railway.toml` sozinho — não precisa mexer em "Root Directory" nem em
+   "Dockerfile Path" manualmente).
+
+2. **Adicionar um Postgres:** no projeto, `+ New` → `Database` → `PostgreSQL`.
+   Isso cria um serviço separado com seu próprio `DATABASE_URL`.
+
+3. **Configurar as variáveis** do serviço do backend (aba *Variables*):
+   ```
+   DATABASE_URL=${{Postgres.DATABASE_URL}}
+   JWT_SECRET=<gere uma string aleatória longa>
+   GOOGLE_CLIENT_ID=...
+   GOOGLE_CLIENT_SECRET=...
+   GOOGLE_REDIRECT_URI=https://<seu-dominio-da-railway>/api/auth/google/callback
+   FRONTEND_URL=https://<seu-dominio-da-railway>
+   ADMIN_EMAILS=seu@email.com
+   ```
+   `${{Postgres.DATABASE_URL}}` é a sintaxe da Railway pra referenciar a variável
+   de outro serviço do mesmo projeto — não precisa copiar o valor manualmente.
+   Não defina `PORT`: a Railway injeta essa variável sozinha, e o app já lê
+   `os.environ["PORT"]` (com fallback pra 8000 se não existir).
+
+4. **Gerar um domínio público:** *Settings* → *Networking* → *Generate Domain*
+   (é o que resolve o "Unexposed service" que você viu). Depois de gerado,
+   volte no passo 3 e troque `<seu-dominio-da-railway>` pelo domínio real nas
+   duas variáveis que dependem dele.
+
+5. **Atualizar o Google Cloud Console:** adicione
+   `https://<seu-dominio-da-railway>/api/auth/google/callback` nas URIs de
+   redirecionamento autorizadas (o `localhost` continua lá também, pra
+   desenvolvimento local).
+
+6. **Aplicar o schema no Postgres da Railway** (ela não roda o
+   `docker-entrypoint-initdb.d` como o Postgres local — isso é só um mecanismo
+   da imagem oficial rodando localmente). Pegue o `DATABASE_URL` na aba
+   *Variables* do serviço Postgres e rode, da sua máquina:
+   ```bash
+   # Debian: sudo apt install postgresql-client (se ainda não tiver o psql)
+   psql "postgresql://usuario:senha@host:porta/banco" -f db/init.sql
+   ```
+
+7. **Fazer o deploy** (a Railway já deve ter feito automaticamente após o
+   push — se não, *Deployments* → *Redeploy*). Depois, acesse
+   `https://<seu-dominio>/admin.html`, faça login com um e-mail que esteja em
+   `ADMIN_EMAILS`, e importe o exemplo pra testar o fluxo completo.
+
 ## Idiomas (interface × conteúdo)
 
 São dois eixos independentes, tratados separadamente de propósito:
@@ -108,6 +161,7 @@ essa é a base que ele vai consumir.
 ```
 vecomota/
 ├── docker-compose.yml
+├── railway.toml               # config de build pra Railway (aponta pro backend/Dockerfile)
 ├── .env.example
 ├── db/
 │   ├── init.sql              # schema

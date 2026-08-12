@@ -965,4 +965,4 @@ async def admin_import_exams(request, user_id):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, dev=os.environ.get("SANIC_DEV", "false") == "true")
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8000)), dev=os.environ.get("SANIC_DEV", "false") == "true")
