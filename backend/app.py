@@ -1,6 +1,7 @@
 import os
 import json
 from datetime import datetime, timedelta, timezone
+from functools import wraps
 
 from sanic import Sanic, response
 from sanic.response import json as json_response
@@ -58,6 +59,7 @@ def _current_user_id(request) -> str | None:
 
 
 def require_auth(handler):
+    @wraps(handler)
     async def wrapper(request, *args, **kwargs):
         user_id = _current_user_id(request)
         if not user_id:
@@ -72,6 +74,7 @@ async def _is_admin(conn, user_id: str) -> bool:
 
 
 def require_admin(handler):
+    @wraps(handler)
     async def wrapper(request, *args, **kwargs):
         user_id = _current_user_id(request)
         if not user_id:
