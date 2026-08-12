@@ -322,7 +322,7 @@ async def me(request, user_id):
         row = await conn.fetchrow(
             "SELECT id, email, name, avatar_url, locale, is_admin FROM users WHERE id = $1", user_id
         )
-    return json_response(dict(row))
+    return json_response({**dict(row), "id": str(row["id"])})
 
 
 @app.patch("/api/me/locale")
