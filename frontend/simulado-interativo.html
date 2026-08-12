@@ -5,16 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
   :root{
-    --paper:#f5f2ea;
-    --paper-line:#e3ddc9;
-    --ink:#20281f;
-    --ink-soft:#5b6357;
-    --pine:#2f5233;
-    --pine-deep:#1e3a21;
-    --gold:#b08a2e;
-    --wrong:#9a3324;
-    --right:#2f6b3a;
-    --card:#fffdf7;
+    --paper:#FAFAF8;
+    --paper-line:#E4E7F0;
+    --ink:#101B45;
+    --ink-soft:#55608A;
+    --pine:#0EA79D;
+    --pine-deep:#101B45;
+    --gold:#FFC73E;
+    --wrong:#F2685F;
+    --right:#0EA79D;
+    --card:#FFFFFF;
     font-size:16px;
   }
   *{box-sizing:border-box;}
@@ -28,18 +28,12 @@
   .ui{ font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif; }
 
   header.top{
-    background:var(--pine-deep);
-    color:#f2ede0;
-    padding:22px 24px 20px;
+    background:#FFFFFF;
+    color:var(--ink);
+    padding:18px 24px 16px;
     border-bottom:4px solid var(--gold);
   }
-  header.top .eyebrow{
-    text-transform:uppercase;
-    letter-spacing:.14em;
-    font-size:.7rem;
-    color:#c9d6c4;
-    font-family:inherit;
-  }
+  header.top .logo{ height:32px; width:auto; display:block; margin-bottom:6px; }
   header.top h1{
     margin:.15em 0 0;
     font-size:1.6rem;
@@ -47,7 +41,7 @@
     font-family:Georgia,serif;
   }
   header.top .sub{
-    color:#d7dfce;
+    color:var(--ink-soft);
     font-size:.92rem;
     margin-top:4px;
   }
@@ -130,18 +124,18 @@
     cursor:pointer;
     margin-bottom:5px;
   }
-  .opt:hover{ background:#f1ede0; }
+  .opt:hover{ background:#EEF1FA; }
   .opt input{ margin-top:4px; accent-color:var(--pine); }
-  .opt.selected{ background:#eef2e6; border-color:var(--pine); }
-  .opt.correct{ background:#e6f2e4; border-color:var(--right); }
-  .opt.incorrect{ background:#f5e6e1; border-color:var(--wrong); }
+  .opt.selected{ background:#EEF1FA; border-color:var(--pine); }
+  .opt.correct{ background:#E1F7F5; border-color:var(--right); }
+  .opt.incorrect{ background:#FCEAE9; border-color:var(--wrong); }
   .opt .letter{ font-weight:700; font-family:inherit; }
 
   .explain{
     display:none;
     margin-top:10px;
     padding:10px 12px;
-    background:#faf7ee;
+    background:#FAFAF8;
     border-left:3px solid var(--gold);
     font-family:inherit;
     font-size:.88rem;
@@ -169,7 +163,7 @@
   }
   .integrity-banner{
     display:none;
-    background:#fbf3e0;
+    background:#FFF3D6;
     border:1px solid var(--gold);
     color:var(--ink);
     font-family:inherit;
@@ -189,8 +183,8 @@
     border-radius:14px;
     margin-top:10px;
   }
-  .pass-badge.pass{ background:#e6f2e4; color:var(--right); }
-  .pass-badge.fail{ background:#f5e6e1; color:var(--wrong); }
+  .pass-badge.pass{ background:#E1F7F5; color:var(--right); }
+  .pass-badge.fail{ background:#FCEAE9; color:var(--wrong); }
   .integrity-summary{
     margin-top:12px;
     font-family:inherit;
@@ -239,13 +233,13 @@
     font-size:.95rem;
     font-weight:700;
     color:var(--pine-deep);
-    background:#eef2e6;
+    background:#EEF1FA;
     border-radius:3px;
     padding:8px;
     margin-bottom:16px;
   }
   .timer-badge.show{ display:block; }
-  .timer-badge.low-time{ background:#f5e6e1; color:var(--wrong); }
+  .timer-badge.low-time{ background:#FCEAE9; color:var(--wrong); }
 
 
   .actions{
@@ -268,7 +262,7 @@
   }
   #submit-btn{ background:var(--pine); color:#fff; }
   #submit-btn:hover{ background:var(--pine-deep); }
-  #submit-btn:disabled{ background:#a9b3a3; cursor:not-allowed; }
+  #submit-btn:disabled{ background:#C7CBD8; cursor:not-allowed; }
   #retry-btn{ background:transparent; color:var(--pine-deep); border:1.5px solid var(--pine-deep); }
 
   .result-banner{
@@ -300,7 +294,7 @@
     font-size:.78rem;
   }
   .by-area span{
-    background:#eef2e6;
+    background:#EEF1FA;
     padding:3px 9px;
     border-radius:12px;
     color:var(--pine-deep);
@@ -337,14 +331,14 @@
     font-family:inherit; font-size:.85rem; color:var(--ink-soft);
     display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin:10px 0 18px;
   }
-  .exam-meta span{ background:#eef2e6; padding:4px 10px; border-radius:12px; color:var(--pine-deep); }
+  .exam-meta span{ background:#EEF1FA; padding:4px 10px; border-radius:12px; color:var(--pine-deep); }
 </style>
 <title>Vecomota — Fazer prova</title>
 </head>
 <body>
 
 <header class="top">
-  <div class="ui eyebrow" id="header-eyebrow">Vecomota</div>
+  <a href="minhas-provas.html"><img class="logo" src="assets/logo.png" alt="Vecomota — Vê como tá."></a>
   <h1 id="header-title">Carregando prova...</h1>
   <div class="ui sub" id="header-sub"></div>
 </header>
@@ -487,7 +481,6 @@ async function init(){
   }
 
   exam = examRes.data;
-  document.getElementById("header-eyebrow").textContent = "Vecomota";
   document.getElementById("header-title").textContent = exam.title;
   document.getElementById("header-sub").textContent =
     `${exam.questions.length} questões` + (exam.description ? " · " + exam.description : "");

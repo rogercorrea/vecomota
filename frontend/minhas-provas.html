@@ -6,17 +6,17 @@
 <title>Vecomota — Minhas Provas</title>
 <style>
   :root{
-    --paper:#f5f2ea;
-    --paper-line:#e3ddc9;
-    --ink:#20281f;
-    --ink-soft:#5b6357;
-    --pine:#2f5233;
-    --pine-deep:#1e3a21;
-    --gold:#b08a2e;
-    --gold-deep:#8a6a1f;
-    --wrong:#9a3324;
-    --right:#2f6b3a;
-    --card:#fffdf7;
+    --paper:#FAFAF8;
+    --paper-line:#E4E7F0;
+    --ink:#101B45;
+    --ink-soft:#55608A;
+    --pine:#0EA79D;
+    --pine-deep:#101B45;
+    --gold:#FFC73E;
+    --gold-deep:#E6A80F;
+    --wrong:#F2685F;
+    --right:#0EA79D;
+    --card:#FFFFFF;
   }
   *{box-sizing:border-box;}
   body{
@@ -27,9 +27,9 @@
     line-height:1.5;
   }
   header.top{
-    background:var(--pine-deep);
-    color:#f2ede0;
-    padding:20px 24px;
+    background:#FFFFFF;
+    color:var(--ink);
+    padding:16px 24px;
     border-bottom:4px solid var(--gold);
     display:flex;
     align-items:center;
@@ -37,21 +37,18 @@
     flex-wrap:wrap;
     gap:10px;
   }
-  header.top h1{ margin:0; font-size:1.3rem; }
-  header.top .eyebrow{
-    text-transform:uppercase; letter-spacing:.12em; font-size:.68rem; color:#c9d6c4;
-  }
+  header.top .logo{ height:44px; width:auto; display:block; }
   #user-box{ font-size:.85rem; display:flex; align-items:center; gap:10px; }
   #user-box img{ width:28px; height:28px; border-radius:50%; }
   a.btn, button{
     font-family:inherit; border:none; border-radius:3px; padding:9px 16px;
     font-size:.88rem; font-weight:600; cursor:pointer; text-decoration:none; display:inline-block;
   }
-  .btn-primary{ background:var(--gold); color:#2a2110; }
+  .btn-primary{ background:var(--gold); color:#101B45; }
   .btn-primary:hover{ background:var(--gold-deep); }
-  .btn-ghost{ background:transparent; color:#f2ede0; border:1px solid #6b6350; }
-  .btn-danger{ background:#f5e6e1; color:var(--wrong); }
-  .btn-secondary{ background:#eef2e6; color:var(--pine-deep); }
+  .btn-ghost{ background:transparent; color:var(--ink); border:1px solid var(--paper-line); }
+  .btn-danger{ background:#FCEAE9; color:var(--wrong); }
+  .btn-secondary{ background:#EEF1FA; color:var(--pine-deep); }
 
   main{ max-width:920px; margin:0 auto; padding:24px 18px 60px; }
   .panel{
@@ -64,22 +61,22 @@
   textarea{
     width:100%; min-height:220px; font-family:"SFMono-Regular",Menlo,monospace;
     font-size:.82rem; border:1px solid var(--paper-line); border-radius:3px; padding:12px;
-    background:#fffef9; color:var(--ink);
+    background:#FFFFFF; color:var(--ink);
   }
   .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px; }
 
   .msg{ margin-top:12px; padding:10px 14px; border-radius:3px; font-size:.85rem; display:none; }
   .msg.show{ display:block; }
-  .msg.ok{ background:#e6f2e4; color:var(--right); border:1px solid var(--right); }
-  .msg.error{ background:#f5e6e1; color:var(--wrong); border:1px solid var(--wrong); }
+  .msg.ok{ background:#E1F7F5; color:var(--right); border:1px solid var(--right); }
+  .msg.error{ background:#FCEAE9; color:var(--wrong); border:1px solid var(--wrong); }
   .msg ul{ margin:6px 0 0; padding-left:18px; }
 
   table{ width:100%; border-collapse:collapse; font-size:.85rem; }
   th, td{ text-align:left; padding:8px 10px; border-bottom:1px solid var(--paper-line); }
   th{ color:var(--ink-soft); font-weight:600; text-transform:uppercase; font-size:.7rem; letter-spacing:.05em; }
   .badge{ display:inline-block; font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:10px; }
-  .badge.public{ background:#e6f2e4; color:var(--right); }
-  .badge.hidden{ background:#eee; color:var(--ink-soft); }
+  .badge.public{ background:#E1F7F5; color:var(--right); }
+  .badge.hidden{ background:#EDEFF6; color:var(--ink-soft); }
   td.actions{ white-space:nowrap; }
   td.actions button, td.actions a{ padding:5px 10px; font-size:.78rem; margin-right:6px; }
 
@@ -107,10 +104,7 @@
 <body>
 
 <header class="top">
-  <div>
-    <div class="eyebrow">Sua conta</div>
-    <h1>Minhas Provas</h1>
-  </div>
+  <a href="minhas-provas.html"><img class="logo" src="assets/logo.png" alt="Vecomota — Vê como tá."></a>
   <div id="user-box"></div>
 </header>
 
