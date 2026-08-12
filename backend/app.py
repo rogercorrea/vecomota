@@ -12,7 +12,7 @@ from import_schema import validate_import, slugify
 
 app = Sanic("Vecomota")
 # Serve os arquivos estáticos do frontend (admin.html, simulado-interativo.html, i18n/...)
-app.static("/", "/app/frontend")
+app.static("/", "/app/frontend", index="minhas-provas.html")
 
 SESSION_COOKIE = "session"
 SUPPORTED_LOCALES = ("pt-BR", "en", "es")
