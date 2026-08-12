@@ -10,9 +10,19 @@ obrigatoriamente vinculada a uma categoria.
 
 ## O que já funciona
 
-- Login com Google (OAuth 2.0), sessão via cookie httpOnly com JWT.
+- Login com Google (OAuth 2.0), sessão via cookie httpOnly com JWT — inclusive
+  voltando pra página certa depois do login (`?next=`), não só pra home.
 - Qualquer usuário cria provas (`POST /api/my/exams/import`) e lista as suas
   (`GET /api/my/exams`, com o link de compartilhamento pronto).
+- **`minhas-provas.html`** — tela de autoatendimento: qualquer conta Google loga,
+  cola/sobe o JSON, cria a prova, copia o link, vê relatório, exclui. Não exige
+  `is_admin`.
+- **`simulado-interativo.html`** — agora conectado à API de verdade: recebe
+  `?exam=<id>` ou `?token=<share_token>` na URL, checa login, mostra
+  tela inicial com o histórico da pessoa nessa prova, inicia a tentativa
+  (`/attempts/start`), cronometra com o prazo do servidor, aplica monitoramento
+  de foco/proteção de cópia conforme a config da prova, corrige via API
+  (`/attempts/<id>/submit`) e envia a auditoria detalhada separadamente.
 - Acesso via link secreto (`GET /api/exams/shared/<token>`), independente de a
   prova estar no catálogo público.
 - Toda questão pertence a uma categoria da própria prova (criada automaticamente
@@ -24,19 +34,15 @@ obrigatoriamente vinculada a uma categoria.
   de cada pessoa que respondeu, separado por categoria — é o que o dono da prova
   usa pra ver onde o grupo (ou uma pessoa) está mais fraco.
 - Painel de admin (`admin.html`) para o catálogo oficial: importar em lote,
-  criar tipos de prova, publicar/ocultar, ver relatório, copiar link.
+  criar tipos de prova, publicar/ocultar (só admin decide isso agora — dono
+  comum não pode se autopublicar no catálogo geral), ver relatório, copiar link.
 
 ## O que **não** está pronto (próximos passos, se fizer sentido pra vocês)
 
-- **Tela para usuário comum criar prova.** Hoje a criação por qualquer usuário
-  existe só via API (`POST /api/my/exams/import`) — não tem uma UI própria
-  ainda (o `admin.html` é só para quem tem `is_admin`). Se o uso real vai ser
-  "qualquer pessoa cria e compartilha", vale construir essa tela.
-- **Frontend integrado.** O HTML interativo de prova (`simulado-interativo.html`)
-  ainda roda com dados fixos e `window.storage` local, não chamando essa API de
-  verdade (iniciar/finalizar tentativa, enviar auditoria). Os recursos (tempo,
-  aviso de mouse, nota mínima) já estão implementados nele, só falta plugar nas
-  chamadas reais.
+- **Planos (Gratuito/Profissional/Escola).** Foi desenhado (limite de provas
+  ativas por plano, organizações tipo "escola" com múltiplos professores
+  compartilhando visibilidade) mas ainda não entrou no código — a modelagem
+  parou no meio antes de outras prioridades. Ainda vale a pena implementar.
 - **Hospedagem.** Este projeto roda localmente com Docker, mas o ambiente onde eu gero
   código (aqui no chat) não mantém servidores no ar — o container se encerra ao final da
   conversa. Para ficar acessível de verdade (ex: da rua, do celular dela), vocês vão
@@ -109,9 +115,11 @@ vecomota/
 │   └── example_import.json   # exemplo do formato JSON padrão (2 provas, categorias diferentes)
 ├── frontend/
 │   ├── i18n/                     # dicionários de interface (pt-BR, en, es)
+│   ├── app-common.js             # funções JS compartilhadas (admin.html + minhas-provas.html)
 │   ├── admin.html                # tela de admin (importação, catálogo, relatórios)
-│   ├── simulado-interativo.html  # tela de prova pro estudante
-│   └── example_import.json       # cópia usada pelo botão "Carregar exemplo" do admin
+│   ├── minhas-provas.html        # autoatendimento: qualquer usuário cria/gerencia suas provas
+│   ├── simulado-interativo.html  # tela de prova pro estudante, ligada à API real
+│   └── example_import.json       # cópia usada pelo botão "Carregar exemplo"
 └── backend/
     ├── Dockerfile
     ├── requirements.txt
@@ -120,6 +128,17 @@ vecomota/
     ├── db.py               # pool de conexão asyncpg
     └── import_schema.py    # validação do formato JSON padrão + slugify de categoria
 ```
+
+## Como abrir/compartilhar uma prova
+
+- **Quem cria** vai em `minhas-provas.html`, cola o JSON, cria a prova. A tela
+  já mostra o link: `.../simulado-interativo.html?token=<share_token>`.
+- **Quem responde** abre esse link, faz login (se ainda não estiver), vê uma
+  tela inicial com o histórico dela nessa prova, clica em "Começar" — só aí o
+  cronômetro (se houver) começa a contar.
+- Também dá pra abrir uma prova pública do catálogo direto pelo id:
+  `.../simulado-interativo.html?exam=<id>`.
+
 
 ## Dono, compartilhamento e categorias
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vecomota — Admin</title>
+<title>Vecomota — Minhas Provas</title>
 <style>
   :root{
     --paper:#f5f2ea;
@@ -27,7 +27,7 @@
     line-height:1.5;
   }
   header.top{
-    background:var(--ink);
+    background:var(--pine-deep);
     color:#f2ede0;
     padding:20px 24px;
     border-bottom:4px solid var(--gold);
@@ -39,7 +39,7 @@
   }
   header.top h1{ margin:0; font-size:1.3rem; }
   header.top .eyebrow{
-    text-transform:uppercase; letter-spacing:.12em; font-size:.68rem; color:#c9c2a8;
+    text-transform:uppercase; letter-spacing:.12em; font-size:.68rem; color:#c9d6c4;
   }
   #user-box{ font-size:.85rem; display:flex; align-items:center; gap:10px; }
   #user-box img{ width:28px; height:28px; border-radius:50%; }
@@ -77,13 +77,11 @@
   table{ width:100%; border-collapse:collapse; font-size:.85rem; }
   th, td{ text-align:left; padding:8px 10px; border-bottom:1px solid var(--paper-line); }
   th{ color:var(--ink-soft); font-weight:600; text-transform:uppercase; font-size:.7rem; letter-spacing:.05em; }
-  .badge{
-    display:inline-block; font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:10px;
-  }
+  .badge{ display:inline-block; font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:10px; }
   .badge.public{ background:#e6f2e4; color:var(--right); }
   .badge.hidden{ background:#eee; color:var(--ink-soft); }
   td.actions{ white-space:nowrap; }
-  td.actions button{ padding:5px 10px; font-size:.78rem; margin-right:6px; }
+  td.actions button, td.actions a{ padding:5px 10px; font-size:.78rem; margin-right:6px; }
 
   #locked{ text-align:center; padding:60px 20px; }
   #locked.hide, #app.hide{ display:none; }
@@ -102,14 +100,16 @@
   .cell-pct{ font-weight:700; }
   .cell-pct.good{ color:var(--right); }
   .cell-pct.bad{ color:var(--wrong); }
+
+  .empty-state{ text-align:center; padding:30px 10px; color:var(--ink-soft); }
 </style>
 </head>
 <body>
 
 <header class="top">
   <div>
-    <div class="eyebrow">Área restrita</div>
-    <h1>Vecomota — Admin</h1>
+    <div class="eyebrow">Sua conta</div>
+    <h1>Minhas Provas</h1>
   </div>
   <div id="user-box"></div>
 </header>
@@ -117,50 +117,32 @@
 <main>
 
   <div id="locked" class="panel hide">
-    <h2>Acesso restrito</h2>
-    <p class="hint">Entre com uma conta Google autorizada como administradora para gerenciar o conteúdo.</p>
-    <a class="btn btn-primary" href="/api/auth/google/login">Entrar com Google</a>
+    <h2>Entre pra criar suas provas</h2>
+    <p class="hint">Qualquer conta Google pode criar provas e compartilhar o link com quem quiser.</p>
+    <a class="btn btn-primary" id="login-link" href="#">Entrar com Google</a>
   </div>
 
   <div id="app" class="hide">
 
     <div class="panel">
-      <h2>Importar provas (JSON padrão)</h2>
+      <h2>Criar uma prova nova</h2>
       <p class="hint">
-        Cole o JSON ou selecione um arquivo. Aceita uma prova única ou um lote com
-        <code>"exams": [...]</code> — inclusive várias versões de idioma da mesma prova,
-        cada uma com seu próprio <code>"language"</code>.
+        Cole o JSON no formato padrão (ou suba um arquivo). Toda questão precisa de uma
+        <code>"category"</code> — é o que separa o relatório por assunto depois.
+        Sua prova nasce privada: só quem tiver o link consegue acessar.
       </p>
-      <textarea id="import-textarea" placeholder='{"exams": [ { "exam_type": "...", "title": "...", "language": "pt-BR", "questions": [...] } ]}'></textarea>
+      <textarea id="import-textarea" placeholder='{"exams": [ { "exam_type": "outro", "title": "...", "language": "pt-BR", "questions": [ { "category": "...", "question_text": "...", "options": [...] } ] } ]}'></textarea>
       <div class="row">
         <input type="file" id="file-input" accept=".json">
         <button class="btn-secondary" id="load-example-btn">Carregar exemplo</button>
-        <button class="btn-primary" id="import-btn">Importar</button>
+        <button class="btn-primary" id="import-btn">Criar prova</button>
       </div>
       <div class="msg" id="import-msg"></div>
     </div>
 
     <div class="panel">
-      <h2>Novo tipo de prova</h2>
-      <p class="hint">Categorias já existem para Seriado UFMG, ENEM, Concursos, Inglês e TI — crie outras aqui se precisar.</p>
-      <div class="row">
-        <input type="text" id="type-slug" placeholder="slug (ex: vestibular_usp)" style="padding:8px; border:1px solid var(--paper-line); border-radius:3px;">
-        <input type="text" id="type-name" placeholder="Nome de exibição (ex: Vestibular USP)" style="padding:8px; border:1px solid var(--paper-line); border-radius:3px; flex:1; min-width:200px;">
-        <button class="btn-primary" id="create-type-btn">Criar tipo</button>
-      </div>
-      <div class="msg" id="type-msg"></div>
-    </div>
-
-    <div class="panel">
-      <h2>Provas cadastradas</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Título</th><th>Dono</th><th>Tipo</th><th>Idioma</th><th>Questões</th><th>Nota mín.</th><th>Tempo</th><th>Visível</th><th>Ações</th>
-          </tr>
-        </thead>
-        <tbody id="exams-tbody"></tbody>
-      </table>
+      <h2>Suas provas</h2>
+      <div id="exams-wrap"></div>
     </div>
 
   </div>
@@ -178,29 +160,24 @@
 
 <script src="app-common.js"></script>
 <script>
-const EXAMPLE_IMPORT_URL = "example_import.json"; // ajuste o caminho se hospedar em outro lugar
+const EXAMPLE_IMPORT_URL = "example_import.json";
 
 async function checkAuth(){
   const me = await api("/api/me");
   if (!me.ok || !me.data){
+    document.getElementById("login-link").href =
+      "/api/auth/google/login?next=" + encodeURIComponent(location.pathname);
     document.getElementById("locked").classList.remove("hide");
-    return;
-  }
-  if (!me.data.is_admin){
-    document.getElementById("locked").classList.remove("hide");
-    document.getElementById("locked").innerHTML =
-      `<h2>Sem permissão de admin</h2><p class="hint">Você está logada como ${me.data.email}, mas essa conta não tem acesso à área de administração.</p>
-       <a class="btn btn-secondary" href="/api/auth/logout">Trocar de conta</a>`;
     return;
   }
   document.getElementById("app").classList.remove("hide");
   document.getElementById("user-box").innerHTML = `
     <img src="${me.data.avatar_url || ''}" alt="">
     <span>${me.data.name || me.data.email}</span>
-    <a class="btn btn-ghost" href="minhas-provas.html">Minhas provas</a>
+    ${me.data.is_admin ? '<a class="btn btn-ghost" href="admin.html">Admin</a>' : ''}
     <a class="btn btn-ghost" href="/api/auth/logout">Sair</a>
   `;
-  loadExams();
+  loadMyExams();
 }
 
 document.getElementById("file-input").addEventListener("change", (e) => {
@@ -229,86 +206,62 @@ document.getElementById("import-btn").addEventListener("click", async () => {
     showMsg("import-msg", "error", "JSON inválido: " + e.message);
     return;
   }
-  const res = await api("/api/admin/exams/import", {
+  const res = await api("/api/my/exams/import", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
   if (res.ok){
-    showMsg("import-msg", "ok", `Importado com sucesso — ${res.data.count} prova(s) criada(s).`);
-    loadExams();
+    showMsg("import-msg", "ok", `Prova criada — ${res.data.count} prova(s). Copie o link abaixo pra compartilhar.`);
+    loadMyExams();
   } else {
-    showMsg("import-msg", "error", "Falha na importação:", res.data && res.data.details || [res.data && res.data.error || "erro desconhecido"]);
+    showMsg("import-msg", "error", "Não deu pra criar:", (res.data && res.data.details) || [(res.data && res.data.error) || "erro desconhecido"]);
   }
 });
 
-document.getElementById("create-type-btn").addEventListener("click", async () => {
-  const slug = document.getElementById("type-slug").value.trim();
-  const name = document.getElementById("type-name").value.trim();
-  if (!slug || !name){
-    showMsg("type-msg", "error", "Preencha slug e nome.");
-    return;
-  }
-  const res = await api("/api/admin/exam-types", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ slug, name }),
-  });
-  if (res.ok){
-    showMsg("type-msg", "ok", `Tipo "${res.data.name}" (${res.data.slug}) pronto para uso.`);
-    document.getElementById("type-slug").value = "";
-    document.getElementById("type-name").value = "";
-  } else {
-    showMsg("type-msg", "error", res.data && res.data.error || "erro desconhecido");
-  }
-});
-
-async function loadExams(){
-  const res = await api("/api/admin/exams");
-  const tbody = document.getElementById("exams-tbody");
+async function loadMyExams(){
+  const res = await api("/api/my/exams");
+  const wrap = document.getElementById("exams-wrap");
   if (!res.ok){
-    tbody.innerHTML = `<tr><td colspan="9">Não foi possível carregar as provas.</td></tr>`;
+    wrap.innerHTML = `<p class="empty-state">Não foi possível carregar suas provas.</p>`;
     return;
   }
   if (res.data.length === 0){
-    tbody.innerHTML = `<tr><td colspan="9">Nenhuma prova cadastrada ainda.</td></tr>`;
+    wrap.innerHTML = `<p class="empty-state">Você ainda não criou nenhuma prova.</p>`;
     return;
   }
+  wrap.innerHTML = `
+    <table>
+      <thead>
+        <tr><th>Título</th><th>Idioma</th><th>Questões</th><th>Tentativas</th><th>Visível</th><th>Ações</th></tr>
+      </thead>
+      <tbody id="exams-tbody"></tbody>
+    </table>
+  `;
+  const tbody = document.getElementById("exams-tbody");
+  const token = url => url.split("/").pop();
+
   tbody.innerHTML = res.data.map(e => `
-    <tr data-id="${e.id}" data-title="${e.title}">
+    <tr data-id="${e.id}" data-title="${e.title}" data-token="${token(e.share_url)}">
       <td>${e.title}</td>
-      <td>${e.owner_name || e.owner_email}</td>
-      <td>${e.exam_type_name}</td>
       <td>${e.language}</td>
       <td>${e.question_count}</td>
-      <td>${e.passing_score_percent !== null ? e.passing_score_percent + "%" : "—"}</td>
-      <td>${e.time_limit_minutes !== null ? e.time_limit_minutes + " min" : "sem limite"}</td>
-      <td><span class="badge ${e.is_public ? "public" : "hidden"}">${e.is_public ? "pública" : "oculta"}</span></td>
+      <td>${e.attempt_count}</td>
+      <td><span class="badge ${e.is_public ? "public" : "hidden"}">${e.is_public ? "pública" : "privada"}</span></td>
       <td class="actions">
-        <button class="btn-secondary toggle-btn">${e.is_public ? "Ocultar" : "Publicar"}</button>
-        <button class="btn-secondary copy-link-btn" data-token="${e.share_token}">Copiar link</button>
+        <a class="btn-secondary" href="simulado-interativo.html?exam=${e.id}" target="_blank">Abrir</a>
+        <button class="btn-secondary copy-link-btn">Copiar link</button>
         <button class="btn-secondary report-btn">Relatório</button>
         <button class="btn-danger delete-btn">Excluir</button>
       </td>
     </tr>
   `).join("");
 
-  tbody.querySelectorAll(".toggle-btn").forEach(btn => {
-    btn.addEventListener("click", async (e) => {
-      const tr = e.target.closest("tr");
-      const id = tr.dataset.id;
-      const currentlyPublic = e.target.textContent.trim() === "Ocultar";
-      await api(`/api/exams/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_public: !currentlyPublic }),
-      });
-      loadExams();
-    });
-  });
-
   tbody.querySelectorAll(".copy-link-btn").forEach(btn => {
-    btn.addEventListener("click", (e) => copyShareLink(e.target.dataset.token, e.target));
+    btn.addEventListener("click", (e) => {
+      const tr = e.target.closest("tr");
+      copyShareLink(tr.dataset.token, e.target);
+    });
   });
 
   tbody.querySelectorAll(".report-btn").forEach(btn => {
@@ -321,11 +274,9 @@ async function loadExams(){
   tbody.querySelectorAll(".delete-btn").forEach(btn => {
     btn.addEventListener("click", async (e) => {
       const tr = e.target.closest("tr");
-      const id = tr.dataset.id;
-      const title = tr.dataset.title;
-      if (!confirm(`Excluir "${title}"? Isso também apaga o histórico de tentativas dessa prova. Não dá pra desfazer.`)) return;
-      await api(`/api/exams/${id}`, { method: "DELETE" });
-      loadExams();
+      if (!confirm(`Excluir "${tr.dataset.title}"? Isso também apaga o histórico de quem já respondeu. Não dá pra desfazer.`)) return;
+      await api(`/api/exams/${tr.dataset.id}`, { method: "DELETE" });
+      loadMyExams();
     });
   });
 }

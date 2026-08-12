@@ -15,9 +15,18 @@ app.static("/", "/app/frontend")
 
 SESSION_COOKIE = "session"
 SUPPORTED_LOCALES = ("pt-BR", "en", "es")
-# Guarda temporária dos "state" do OAuth. Em produção com mais de um
-# processo/worker, troque por Redis ou pela própria tabela do Postgres.
-STATE_STORE: set[str] = set()
+# Guarda temporária dos "state" do OAuth -> path de retorno após o login.
+# Em produção com mais de um processo/worker, troque por Redis ou pela
+# própria tabela do Postgres.
+STATE_STORE: dict[str, str] = {}
+
+
+def _safe_next_path(raw: str | None) -> str:
+    """Só aceita caminhos relativos internos (nunca uma URL externa) — evita
+    que /login?next=... vire um redirecionador aberto (open redirect)."""
+    if not raw or not raw.startswith("/") or raw.startswith("//"):
+        return "/"
+    return raw
 
 
 def _normalize_locale(raw: str | None) -> str:
@@ -249,8 +258,9 @@ async def _shutdown(app, loop):
 
 @app.get("/api/auth/google/login")
 async def google_login(request):
+    next_path = _safe_next_path(request.args.get("next"))
     state = auth_lib.new_state_token()
-    STATE_STORE.add(state)
+    STATE_STORE[state] = next_path
     return response.redirect(auth_lib.build_google_auth_url(state))
 
 
@@ -260,7 +270,7 @@ async def google_callback(request):
     state = request.args.get("state")
     if not code or state not in STATE_STORE:
         return json_response({"error": "invalid_state"}, status=400)
-    STATE_STORE.discard(state)
+    next_path = STATE_STORE.pop(state)
 
     userinfo = await auth_lib.exchange_code_for_userinfo(code)
     google_locale = _normalize_locale(userinfo.get("locale"))
@@ -286,7 +296,7 @@ async def google_callback(request):
         )
 
     token = auth_lib.issue_session_jwt(str(row["id"]))
-    res = response.redirect(os.environ.get("FRONTEND_URL", "/"))
+    res = response.redirect(next_path)  # caminho relativo — mesma origem, sem precisar de FRONTEND_URL aqui
     res.cookies[SESSION_COOKIE] = token
     res.cookies[SESSION_COOKIE]["httponly"] = True
     res.cookies[SESSION_COOKIE]["samesite"] = "Lax"
@@ -467,15 +477,19 @@ async def list_my_exams(request, user_id):
 @app.patch("/api/exams/<exam_id:int>")
 @require_auth
 async def update_exam(request, exam_id, user_id):
-    """Dono ou admin. Hoje só alterna visibilidade pública — suficiente pra
-    "esconder" uma prova com erro sem apagar o histórico de quem já respondeu."""
+    """
+    Alterna a visibilidade pública (catálogo geral) de uma prova.
+    Só ADMIN pode fazer isso — mesmo o dono da prova não pode se auto-publicar
+    no catálogo público sem revisão; ele ainda pode editar/excluir a própria
+    prova (ver DELETE), só não decide sozinho o que vira conteúdo oficial.
+    """
     pool = await get_pool()
     async with pool.acquire() as conn:
-        exam, allowed = await _require_exam_access(conn, exam_id, user_id)
+        exam = await conn.fetchrow("SELECT id FROM exams WHERE id = $1", exam_id)
         if not exam:
             return json_response({"error": "not_found"}, status=404)
-        if not allowed:
-            return json_response({"error": "forbidden"}, status=403)
+        if not await _is_admin(conn, user_id):
+            return json_response({"error": "admin_required", "detail": "Só um admin pode publicar/ocultar no catálogo público."}, status=403)
 
         payload = request.json or {}
         if "is_public" not in payload:
