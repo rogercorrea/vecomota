@@ -66,7 +66,7 @@ async function openReport(examId, title) {
       if (!c) return "<td>—</td>";
       return `<td class="cell-pct ${pctClass(c.correct, c.total)}">${c.correct}/${c.total}</td>`;
     }).join("");
-    const when = new Date(r.submitted_at).toLocaleString("pt-BR");
+    const when = new Date(r.submitted_at).toLocaleDateString("pt-BR");
     const passTag = r.passed === true ? " ✓" : r.passed === false ? " ✗" : "";
     const lateTag = r.late ? " (atrasado)" : "";
     return `<tr>
@@ -84,12 +84,68 @@ async function openReport(examId, title) {
   });
 }
 
+/* Monta o texto plano de um relatório de tentativa — pensado pra colar
+   direto numa IA e pedir um plano de estudo em cima do que foi errado. */
+function attemptDetailToText(data) {
+  const lines = [`Resultado: ${data.score}/${data.total} acertos`, ""];
+  data.questions.forEach((q, i) => {
+    const correctOpt = q.options.find(o => o.is_correct);
+    const chosenOpt = q.chosen_option_id !== null ? q.options.find(o => o.id === q.chosen_option_id) : null;
+    const status = q.is_correct ? "ACERTOU" : (chosenOpt ? "ERROU" : "NÃO RESPONDIDA");
+    lines.push(`Questão ${i + 1} · ${q.category_name} — ${status}`);
+    lines.push(`Pergunta: ${q.question_text}`);
+    if (!q.is_correct && chosenOpt) {
+      lines.push(`Sua resposta: ${chosenOpt.label}) ${chosenOpt.option_text} (errada)`);
+    }
+    if (correctOpt) lines.push(`Resposta certa: ${correctOpt.label}) ${correctOpt.option_text}`);
+    if (q.explanation) lines.push(`Explicação: ${q.explanation}`);
+    lines.push("");
+  });
+  return lines.join("\n");
+}
+
+/* Mostra só a alternativa certa e, se errou, também a que foi escolhida —
+   sem listar as outras alternativas, que não importam pro estudo. */
+function renderAttemptDetailHTML(data) {
+  return data.questions.map((q, i) => {
+    const correctOpt = q.options.find(o => o.is_correct);
+    const chosenOpt = q.chosen_option_id !== null ? q.options.find(o => o.id === q.chosen_option_id) : null;
+    const statusText = q.is_correct ? "✓ Acertou" : (chosenOpt ? "✗ Errou" : "— Não respondida");
+
+    let answerHtml = "";
+    if (!q.is_correct && chosenOpt) {
+      answerHtml += `<div class="opt-line is-chosen-wrong">Sua resposta: ${chosenOpt.label}) ${chosenOpt.option_text} (errada)</div>`;
+    } else if (!q.is_correct && !chosenOpt) {
+      answerHtml += `<div class="opt-line" style="font-style:italic;">Não respondida</div>`;
+    }
+    if (correctOpt) {
+      answerHtml += `<div class="opt-line is-correct">Resposta certa: ${correctOpt.label}) ${correctOpt.option_text}</div>`;
+    }
+
+    return `
+    <div class="detail-q">
+      <div class="qnum">
+        <span class="mark ${q.is_correct ? "right" : "wrong"}">${statusText}</span>
+        <span style="text-transform:uppercase; font-size:.68rem; letter-spacing:.08em; color:var(--ink-soft);">
+          Questão ${i + 1} · ${q.category_name}
+        </span>
+      </div>
+      <div class="qtext">${q.question_text}</div>
+      ${answerHtml}
+      ${q.explanation ? `<div class="explain">Explicação: ${q.explanation}</div>` : ""}
+    </div>`;
+  }).join("");
+}
+
+let lastAttemptDetail = null;
+
 async function openAttemptDetail(examId, attemptId) {
   const titleEl = document.getElementById("attempt-detail-title");
   const bodyEl = document.getElementById("attempt-detail-body");
   const modalEl = document.getElementById("attempt-detail-modal");
   if (!titleEl || !bodyEl || !modalEl) return;
 
+  lastAttemptDetail = null;
   bodyEl.innerHTML = "<p>Carregando...</p>";
   modalEl.classList.add("show");
 
@@ -99,33 +155,30 @@ async function openAttemptDetail(examId, attemptId) {
     return;
   }
 
+  lastAttemptDetail = res.data;
   titleEl.textContent = `Detalhes — ${res.data.score}/${res.data.total} acertos`;
+  bodyEl.innerHTML = renderAttemptDetailHTML(res.data);
+}
 
-  bodyEl.innerHTML = res.data.questions.map((q, i) => `
-    <div class="detail-q">
-      <div class="qnum">
-        <span class="mark ${q.is_correct ? "right" : "wrong"}">${q.is_correct ? "✓" : "✗"}</span>
-        <span style="text-transform:uppercase; font-size:.68rem; letter-spacing:.08em; color:var(--ink-soft);">
-          Questão ${i + 1} · ${q.category_name}
-        </span>
-      </div>
-      <div class="qtext">${q.question_text}</div>
-      ${q.options.map(o => {
-        const isChosen = o.id === q.chosen_option_id;
-        const cls = o.is_correct ? "is-correct" : (isChosen ? "is-chosen-wrong" : "");
-        const marker = isChosen ? "→ " : "";
-        return `<div class="opt-line ${cls}">${marker}${o.label}) ${o.option_text}</div>`;
-      }).join("")}
-      ${q.chosen_option_id === null ? `<div class="opt-line" style="font-style:italic;">Não respondida</div>` : ""}
-      ${q.explanation ? `<div class="explain">${q.explanation}</div>` : ""}
-    </div>
-  `).join("");
+async function copyAttemptDetail(btnEl) {
+  if (!lastAttemptDetail) return;
+  const text = attemptDetailToText(lastAttemptDetail);
+  try {
+    await navigator.clipboard.writeText(text);
+    const original = btnEl.textContent;
+    btnEl.textContent = "Copiado!";
+    setTimeout(() => { btnEl.textContent = original; }, 1500);
+  } catch (err) {
+    prompt("Copie o relatório:", text);
+  }
 }
 
 function initAttemptDetailModal() {
   const closeBtn = document.getElementById("attempt-detail-close-btn");
+  const copyBtn = document.getElementById("attempt-detail-copy-btn");
   const overlay = document.getElementById("attempt-detail-modal");
   if (closeBtn) closeBtn.addEventListener("click", () => overlay.classList.remove("show"));
+  if (copyBtn) copyBtn.addEventListener("click", () => copyAttemptDetail(copyBtn));
   if (overlay) overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.classList.remove("show"); });
 }
 

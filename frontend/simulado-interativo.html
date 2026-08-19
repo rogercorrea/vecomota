@@ -457,7 +457,10 @@
   <div class="modal-box">
     <div class="close-row">
       <h3 id="detail-title">Detalhes da tentativa</h3>
-      <button type="button" id="detail-close-btn" style="background:transparent; color:var(--ink-soft);">Fechar ✕</button>
+      <div style="display:flex; gap:8px; flex-shrink:0;">
+        <button type="button" id="detail-copy-btn" style="background:transparent; color:var(--pine-deep); border:1px solid var(--paper-line);">Copiar</button>
+        <button type="button" id="detail-close-btn" style="background:transparent; color:var(--ink-soft);">Fechar ✕</button>
+      </div>
     </div>
     <div id="detail-body"></div>
   </div>
@@ -626,9 +629,30 @@ document.getElementById("start-btn").addEventListener("click", async () => {
 });
 
 // ---------- Detalhe de uma tentativa (questão a questão) ----------
+let lastAttemptDetail = null;
+
+/* Monta o texto plano de um relatório de tentativa — pensado pra colar
+   direto numa IA e pedir um plano de estudo em cima do que foi errado. */
+function attemptDetailToText(data){
+  const lines = [`Resultado: ${data.score}/${data.total} acertos`, ""];
+  data.questions.forEach((q, i) => {
+    const correctOpt = q.options.find(o => o.is_correct);
+    const chosenOpt = q.chosen_option_id !== null ? q.options.find(o => o.id === q.chosen_option_id) : null;
+    const status = q.is_correct ? "ACERTOU" : (chosenOpt ? "ERROU" : "NÃO RESPONDIDA");
+    lines.push(`Questão ${i + 1} · ${q.category_name} — ${status}`);
+    lines.push(`Pergunta: ${q.question_text}`);
+    if (!q.is_correct && chosenOpt) lines.push(`Sua resposta: ${chosenOpt.label}) ${chosenOpt.option_text} (errada)`);
+    if (correctOpt) lines.push(`Resposta certa: ${correctOpt.label}) ${correctOpt.option_text}`);
+    if (q.explanation) lines.push(`Explicação: ${q.explanation}`);
+    lines.push("");
+  });
+  return lines.join("\n");
+}
+
 async function openAttemptDetail(attemptId){
   const modal = document.getElementById("detail-modal");
   const body = document.getElementById("detail-body");
+  lastAttemptDetail = null;
   body.innerHTML = `<p class="ui" style="color:var(--ink-soft);">Carregando...</p>`;
   modal.classList.add("show");
 
@@ -638,33 +662,57 @@ async function openAttemptDetail(attemptId){
     return;
   }
 
+  lastAttemptDetail = res.data;
   document.getElementById("detail-title").textContent =
     `Detalhes — ${res.data.score}/${res.data.total} acertos`;
 
-  body.innerHTML = res.data.questions.map((q, i) => `
+  body.innerHTML = res.data.questions.map((q, i) => {
+    const correctOpt = q.options.find(o => o.is_correct);
+    const chosenOpt = q.chosen_option_id !== null ? q.options.find(o => o.id === q.chosen_option_id) : null;
+    const statusText = q.is_correct ? "✓ Acertou" : (chosenOpt ? "✗ Errou" : "— Não respondida");
+
+    let answerHtml = "";
+    if (!q.is_correct && chosenOpt){
+      answerHtml += `<div class="opt-line ui is-chosen-wrong">Sua resposta: ${chosenOpt.label}) ${chosenOpt.option_text} (errada)</div>`;
+    } else if (!q.is_correct && !chosenOpt){
+      answerHtml += `<div class="opt-line ui" style="font-style:italic;">Não respondida</div>`;
+    }
+    if (correctOpt){
+      answerHtml += `<div class="opt-line ui is-correct">Resposta certa: ${correctOpt.label}) ${correctOpt.option_text}</div>`;
+    }
+
+    return `
     <div class="detail-q">
       <div class="qnum">
-        <span class="mark ${q.is_correct ? "right" : "wrong"}">${q.is_correct ? "✓" : "✗"}</span>
+        <span class="mark ${q.is_correct ? "right" : "wrong"}">${statusText}</span>
         <span class="ui" style="text-transform:uppercase; font-size:.68rem; letter-spacing:.08em; color:var(--ink-soft);">
           Questão ${i + 1} · ${q.category_name}
         </span>
       </div>
       <div class="qtext">${q.question_text}</div>
-      ${q.options.map(o => {
-        const isChosen = o.id === q.chosen_option_id;
-        const cls = o.is_correct ? "is-correct" : (isChosen ? "is-chosen-wrong" : "");
-        const marker = isChosen ? "→ " : "";
-        return `<div class="opt-line ui ${cls}">${marker}${o.label}) ${o.option_text}</div>`;
-      }).join("")}
-      ${q.chosen_option_id === null ? `<div class="opt-line ui" style="font-style:italic;">Não respondida</div>` : ""}
-      ${q.explanation ? `<div class="explain show ui">${q.explanation}</div>` : ""}
-    </div>
-  `).join("");
+      ${answerHtml}
+      ${q.explanation ? `<div class="explain show ui">Explicação: ${q.explanation}</div>` : ""}
+    </div>`;
+  }).join("");
+}
+
+async function copyAttemptDetail(btnEl){
+  if (!lastAttemptDetail) return;
+  const text = attemptDetailToText(lastAttemptDetail);
+  try {
+    await navigator.clipboard.writeText(text);
+    const original = btnEl.textContent;
+    btnEl.textContent = "Copiado!";
+    setTimeout(() => { btnEl.textContent = original; }, 1500);
+  } catch (err) {
+    prompt("Copie o relatório:", text);
+  }
 }
 
 document.getElementById("detail-close-btn").addEventListener("click", () => {
   document.getElementById("detail-modal").classList.remove("show");
 });
+document.getElementById("detail-copy-btn").addEventListener("click", (e) => copyAttemptDetail(e.currentTarget));
 document.getElementById("detail-modal").addEventListener("click", (e) => {
   if (e.target.id === "detail-modal") e.target.classList.remove("show");
 });

@@ -92,11 +92,13 @@
     background:var(--card); border-radius:4px; max-width:760px; width:100%;
     max-height:82vh; overflow-y:auto; overflow-x:hidden; padding:22px 24px;
   }
-  .modal-box .close-row{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .modal-box .close-row{ display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; }
+  .modal-box .close-row .close-actions{ display:flex; gap:8px; flex-shrink:0; }
   .modal-box table{ font-size:.78rem; }
   .cell-pct{ font-weight:700; }
   .cell-pct.good{ color:var(--right); }
   .cell-pct.bad{ color:var(--wrong); }
+  #report-modal .modal-box{ max-width:min(1180px, 94vw); }
   .table-scroll{ overflow-x:auto; margin-top:4px; }
   .table-scroll table{ width:100%; }
 
@@ -173,7 +175,10 @@
   <div class="modal-box">
     <div class="close-row">
       <h2 id="attempt-detail-title" style="margin:0;">Detalhes da tentativa</h2>
-      <button class="btn-secondary" id="attempt-detail-close-btn">Fechar</button>
+      <div class="close-actions">
+        <button class="btn-secondary" id="attempt-detail-copy-btn">Copiar</button>
+        <button class="btn-secondary" id="attempt-detail-close-btn">Fechar</button>
+      </div>
     </div>
     <div id="attempt-detail-body"></div>
   </div>
