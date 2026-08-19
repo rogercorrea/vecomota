@@ -314,7 +314,12 @@ async function loadMyExams(){
 
 initReportModal();
 initAttemptDetailModal();
-onI18nReady(() => { document.getElementById("page-title").textContent = t("myexams_page_title"); });
+onI18nReady(() => {
+  document.getElementById("page-title").textContent = t("myexams_page_title");
+  // data-i18n só cobre HTML estático — o que foi desenhado via JS (tabela de
+  // provas, links do user-box) precisa ser redesenhado quando o idioma muda.
+  if (!document.getElementById("app").classList.contains("hide")) checkAuth();
+});
 initI18n().then(checkAuth);
 </script>
 

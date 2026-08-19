@@ -936,7 +936,30 @@ async function gradeQuiz(){
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-onI18nReady(() => { document.getElementById("page-title").textContent = t("simulado_page_title"); });
+// data-i18n só cobre HTML estático — o que foi desenhado via JS quando o
+// idioma muda precisa ser atualizado à mão, sem perder o que já estava
+// selecionado/corrigido na prova em andamento.
+function refreshDynamicI18n(){
+  if (!exam) return;
+  document.getElementById("header-sub").textContent =
+    t("question_count", { n: exam.questions.length }) + (exam.description ? " · " + exam.description : "");
+
+  if (document.getElementById("screen-start").style.display !== "none"){
+    showStartScreen();
+    return;
+  }
+  if (document.getElementById("screen-exam").style.display !== "none"){
+    document.querySelectorAll("#quiz-form .qnum").forEach((el, i) => {
+      const q = exam.questions[i];
+      if (q) el.textContent = t("question_label", { n: q.position, category: q.category.name });
+    });
+  }
+}
+
+onI18nReady(() => {
+  document.getElementById("page-title").textContent = t("simulado_page_title");
+  refreshDynamicI18n();
+});
 initI18n().then(init);
 </script>
 
