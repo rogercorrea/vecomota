@@ -1,54 +1,78 @@
-# Vecomota — plataforma de simulados (Docker + Sanic + Postgres + Login Google)
+<p align="center">
+  <img src="frontend/assets/logo.png" alt="Vecomota — Vê como tá." width="260">
+</p>
 
-Modelo: **qualquer usuário logado cria sua própria prova** (dono = quem criou) e
-compartilha um link secreto com quem for responder. Um papel de **admin**
-separado cuida do catálogo público oficial (Seriado UFMG, ENEM etc.) e tem
-visão geral do sistema. Categorias (ex: "Windows"/"Segurança" numa prova de TI,
-"Matemática"/"Inglês" numa prova estilo ENEM) pertencem à **prova**, não a um
-tipo genérico — cada prova define seu próprio vocabulário, e toda questão é
-obrigatoriamente vinculada a uma categoria.
+<h1 align="center">Vecomota</h1>
+<p align="center"><b>Vê como tá.</b> Descubra como está o conhecimento — o seu ou de quem você acompanha.</p>
 
-## O que já funciona
+<p align="center">
+  <img alt="License: AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-blue.svg">
+  <img alt="Backend" src="https://img.shields.io/badge/backend-Python%20%2F%20Sanic-2bb3a3.svg">
+  <img alt="Database" src="https://img.shields.io/badge/database-PostgreSQL-1a2456.svg">
+  <img alt="Deploy" src="https://img.shields.io/badge/deploy-Docker%20%7C%20Railway-f2685f.svg">
+</p>
 
-- Login com Google (OAuth 2.0), sessão via cookie httpOnly com JWT — inclusive
-  voltando pra página certa depois do login (`?next=`), não só pra home.
-- Qualquer usuário cria provas (`POST /api/my/exams/import`) e lista as suas
-  (`GET /api/my/exams`, com o link de compartilhamento pronto).
-- **`minhas-provas.html`** — tela de autoatendimento: qualquer conta Google loga,
-  cola/sobe o JSON, cria a prova, copia o link, vê relatório, exclui. Não exige
-  `is_admin`.
-- **`simulado-interativo.html`** — agora conectado à API de verdade: recebe
-  `?exam=<id>` ou `?token=<share_token>` na URL, checa login, mostra
-  tela inicial com o histórico da pessoa nessa prova, inicia a tentativa
-  (`/attempts/start`), cronometra com o prazo do servidor, aplica monitoramento
-  de foco/proteção de cópia conforme a config da prova, corrige via API
-  (`/attempts/<id>/submit`) e envia a auditoria detalhada separadamente.
-- Acesso via link secreto (`GET /api/exams/shared/<token>`), independente de a
-  prova estar no catálogo público.
-- Toda questão pertence a uma categoria da própria prova (criada automaticamente
-  na importação — sem precisar cadastrar categoria à parte antes).
-- Correção no servidor com nota mínima opcional, limite de tempo opcional
-  (com sinalização de atraso), monitoramento de foco e proteção de cópia opcionais.
-- Auditoria de integridade separada da correção (`POST /api/attempts/<id>/audit`).
-- **Relatórios por categoria**: `GET /api/exams/<id>/reports` mostra o desempenho
-  de cada pessoa que respondeu, separado por categoria — é o que o dono da prova
-  usa pra ver onde o grupo (ou uma pessoa) está mais fraco.
-- Painel de admin (`admin.html`) para o catálogo oficial: importar em lote,
-  criar tipos de prova, publicar/ocultar (só admin decide isso agora — dono
-  comum não pode se autopublicar no catálogo geral), ver relatório, copiar link.
+---
 
-## O que **não** está pronto (próximos passos, se fizer sentido pra vocês)
+**Vecomota** é uma plataforma de simulados com correção automática, login com Google,
+categorias por prova e relatórios de desempenho — o suficiente pra transformar um
+monte de PDF de gabarito em provas cronometradas, corrigidas na hora, com histórico
+e relatório de onde a pessoa está mais fraca.
 
-- **Planos (Gratuito/Profissional/Escola).** Foi desenhado (limite de provas
-  ativas por plano, organizações tipo "escola" com múltiplos professores
-  compartilhando visibilidade) mas ainda não entrou no código — a modelagem
-  parou no meio antes de outras prioridades. Ainda vale a pena implementar.
-- **Hospedagem.** Este projeto roda localmente com Docker, mas o ambiente onde eu gero
-  código (aqui no chat) não mantém servidores no ar — o container se encerra ao final da
-  conversa. Para ficar acessível de verdade (ex: da rua, do celular dela), vocês vão
-  precisar rodar este `docker compose up` em algum lugar que fique ligado: um VPS
-  (Hetzner, DigitalOcean, Contabo — a partir de uns R$25/mês) ou uma plataforma que
-  aceita `docker-compose` (Railway, Render, Fly.io).
+Nasceu de uma necessidade bem concreta: acompanhar de perto os simulados da minha
+filha pro Seriado UFMG, sem depender de planilha e PDF impresso. Virou uma
+plataforma completa — e agora está aberta pra quem quiser usar, adaptar ou
+aprender com o código.
+
+## ✨ O que ela faz
+
+- 🔐 **Login com Google** — qualquer conta cria e gerencia suas próprias provas.
+- 📝 **Qualquer pessoa cria uma prova** colando um JSON (ou subindo um arquivo) —
+  não precisa ser admin. Nasce privada, com um link secreto pra compartilhar.
+- ⏱️ **Correção automática**, com nota mínima opcional, tempo de prova opcional
+  (com sinalização de quem estourou o prazo) e categorias que pertencem à prova
+  (não a um tipo genérico fixo).
+- 📊 **Relatório de desempenho por categoria** — pra quem aplicou a prova ver onde
+  o grupo (ou uma pessoa) está mais fraco.
+- ✅❌ **Detalhe questão a questão** de cada tentativa — o que acertou, o que errou,
+  a explicação de cada uma — com um botão **"Copiar"** que gera um resumo em texto
+  puro pronto pra colar numa IA e pedir um plano de estudo em cima do que errou.
+- ⏳ **Cooldown de 24h** pra refazer a mesma prova — sem decorar resposta de um dia
+  pro outro.
+- 🕵️ **Monitoramento de foco e proteção de cópia opcionais** — indicadores pra
+  revisão humana, nunca reprovação automática nem rastreamento oculto.
+- 🌎 **i18n de verdade**: idioma da interface e idioma do conteúdo da prova são
+  eixos independentes (pt-BR, en, es).
+- 🛠️ **Painel de admin** pra curar um catálogo público oficial, separado das provas
+  privadas de cada usuário.
+
+## 🚀 Comece em 2 minutos
+
+```bash
+git clone https://github.com/rogercorrea/vecomota.git
+cd vecomota
+cp .env.example .env   # preencha GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET e JWT_SECRET
+docker compose up --build
+```
+
+Depois é só logar em `http://localhost:8000/api/auth/google/login` e criar sua
+primeira prova em `minhas-provas.html`. Passo a passo completo (incluindo como
+gerar as credenciais do Google) na seção [Como rodar localmente](#como-rodar-localmente).
+
+## 📚 Índice
+
+- [Como rodar localmente](#como-rodar-localmente)
+- [Deploy na Railway](#deploy-na-railway)
+- [Estrutura do repositório](#estrutura-do-repositório)
+- [Como abrir/compartilhar uma prova](#como-abrircompartilhar-uma-prova)
+- [Dono, compartilhamento e categorias](#dono-compartilhamento-e-categorias)
+- [Tipos de prova (exam_types)](#tipos-de-prova-exam_types)
+- [Nota mínima, monitoramento de foco e proteção de cópia](#nota-mínima-monitoramento-de-foco-e-proteção-de-cópia)
+- [Ciclo de vida da tentativa](#ciclo-de-vida-da-tentativa)
+- [Tela de admin e importação de conteúdo](#tela-de-admin-e-importação-de-conteúdo)
+- [Idiomas (interface × conteúdo)](#idiomas-interface--conteúdo)
+- [Próximos passos](#próximos-passos)
+- [Licença](#licença)
 
 ## Como rodar localmente
 
@@ -137,26 +161,7 @@ conseguir empacotar o `frontend/` junto). Falta configurar o resto pelo painel:
    `https://<seu-dominio>/admin.html`, faça login com um e-mail que esteja em
    `ADMIN_EMAILS`, e importe o exemplo pra testar o fluxo completo.
 
-## Idiomas (interface × conteúdo)
-
-São dois eixos independentes, tratados separadamente de propósito:
-
-- **Idioma da interface** (`users.locale`, um de `pt-BR` / `en` / `es`): preferência
-  de navegação da pessoa. Vem do perfil do Google no primeiro login (campo `locale`
-  do Google, normalizado) e pode ser trocado a qualquer momento em
-  `PATCH /api/me/locale`, sem depender do idioma de nenhuma prova específica.
-- **Idioma do conteúdo** (`exams.language`): propriedade da prova em si. Um simulado
-  de Inglês tem texto em inglês por natureza, mesmo que o usuário navegue com a
-  interface em português — por isso `GET /api/exams?language=en` filtra por esse
-  campo, separado do `?type=`.
-
-O backend não traduz nada — ele só devolve dados e códigos de erro (`not_authenticated`,
-`unsupported_locale` etc.). Toda a tradução da interface fica no frontend, lendo os
-dicionários em `frontend/i18n/strings.<locale>.json` (já com pt-BR, en e es prontos
-com as strings usadas no simulado interativo). Quando integrarmos aquele HTML à API,
-essa é a base que ele vai consumir.
-
-
+## Estrutura do repositório
 
 ```
 vecomota/
@@ -168,12 +173,13 @@ vecomota/
 │   ├── README.md             # nota sobre o antigo seed_example.sql
 │   └── example_import.json   # exemplo do formato JSON padrão (2 provas, categorias diferentes)
 ├── frontend/
-│   ├── i18n/                     # dicionários de interface (pt-BR, en, es)
-│   ├── app-common.js             # funções JS compartilhadas (admin.html + minhas-provas.html)
-│   ├── admin.html                # tela de admin (importação, catálogo, relatórios)
-│   ├── minhas-provas.html        # autoatendimento: qualquer usuário cria/gerencia suas provas
-│   ├── simulado-interativo.html  # tela de prova pro estudante, ligada à API real
-│   └── example_import.json       # cópia usada pelo botão "Carregar exemplo"
+│   ├── assets/logo.png            # identidade visual
+│   ├── i18n/                      # dicionários de interface (pt-BR, en, es)
+│   ├── app-common.js              # funções JS compartilhadas (admin.html + minhas-provas.html)
+│   ├── admin.html                 # tela de admin (importação, catálogo, relatórios)
+│   ├── minhas-provas.html         # autoatendimento: qualquer usuário cria/gerencia suas provas
+│   ├── simulado-interativo.html   # tela de prova pro estudante, ligada à API real
+│   └── example_import.json        # cópia usada pelo botão "Carregar exemplo"
 └── backend/
     ├── Dockerfile
     ├── requirements.txt
@@ -192,7 +198,6 @@ vecomota/
   cronômetro (se houver) começa a contar.
 - Também dá pra abrir uma prova pública do catálogo direto pelo id:
   `.../simulado-interativo.html?exam=<id>`.
-
 
 ## Dono, compartilhamento e categorias
 
@@ -216,11 +221,13 @@ vecomota/
   tentativa finalizada, a nota geral e o desempenho por categoria — a base pra
   responder "essa turma está fraca em quê?". `GET /api/exams/<id>/attempts/<attempt_id>/report`
   é o mesmo recorte, mas de uma tentativa só (o próprio candidato também pode
-  ver o seu).
+  ver o seu). `GET /api/exams/<id>/attempts/<attempt_id>/detail` vai mais fundo:
+  questão a questão, o que foi respondido, o que era certo e a explicação — a
+  base do botão "Detalhes"/"Copiar" usado pra montar um plano de estudo.
 
-## Tipos de prova (`exam_types`) — catálogo, não classificação
+## Tipos de prova (exam_types)
 
-`exam_types` (Seriado UFMG, ENEM, Concursos, Inglês, TI, Outro) é só um rótulo
+Catálogo, não classificação: `exam_types` (Seriado UFMG, ENEM, Concursos, Inglês, TI, Outro) é só um rótulo
 amplo usado no catálogo público e nas estatísticas gerais (`/api/me/stats`) —
 não tem relação com as categorias de dentro da prova. Só admins criam tipos
 novos (`POST /api/admin/exam-types`); ao criar sua própria prova, escolha um
@@ -252,14 +259,18 @@ Três campos novos em `exams`, todos opcionais por prova:
   **na revisão**. Ocorrências seguintes só incrementam o contador, sem repetir o
   aviso — pra não virar um pop-up irritante a cada vez que ela troca de janela
   sem querer.
+- **Cooldown de 24h**: depois de uma tentativa finalizada, a mesma prova só
+  pode ser refeita 24h depois (`RETRY_COOLDOWN_HOURS` em `backend/app.py`) —
+  aplicado tanto no backend (`POST /attempts/start` responde 429) quanto no
+  frontend (botão desabilitado com contagem regressiva).
 
-O simulado interativo (`simulado-interativo.html`) já implementa os quatro
+O simulado interativo (`simulado-interativo.html`) já implementa esses
 recursos localmente, com os valores de exemplo em `EXAM_CONFIG` no início do
 `<script>` — dá pra ligar/desligar cada um ali pra testar o comportamento.
 
-## Ciclo de vida da tentativa: iniciar → responder → finalizar → auditar
+## Ciclo de vida da tentativa
 
-A tentativa (`attempts`) nasce em `POST /api/exams/<id>/attempts/start`
+Iniciar → responder → finalizar → auditar. A tentativa (`attempts`) nasce em `POST /api/exams/<id>/attempts/start`
 (guarda `started_at`) e só fica completa em
 `POST /api/exams/<id>/attempts/<attempt_id>/submit` (calcula nota, aprovação e
 se passou do tempo). Isso existe por dois motivos:
@@ -335,3 +346,41 @@ no meio, por exemplo) não entram no histórico nem nas estatísticas.
   respeita o `is_public` do JSON (catálogo oficial), enquanto
   `POST /api/my/exams/import` sempre força `is_public = false` (prova privada,
   só acessível pelo link) — não importa o que o JSON diga.
+
+## Idiomas (interface × conteúdo)
+
+São dois eixos independentes, tratados separadamente de propósito:
+
+- **Idioma da interface** (`users.locale`, um de `pt-BR` / `en` / `es`): preferência
+  de navegação da pessoa. Vem do perfil do Google no primeiro login (campo `locale`
+  do Google, normalizado) e pode ser trocado a qualquer momento em
+  `PATCH /api/me/locale`, sem depender do idioma de nenhuma prova específica.
+- **Idioma do conteúdo** (`exams.language`): propriedade da prova em si. Um simulado
+  de Inglês tem texto em inglês por natureza, mesmo que o usuário navegue com a
+  interface em português — por isso `GET /api/exams?language=en` filtra por esse
+  campo, separado do `?type=`.
+
+O backend não traduz nada — ele só devolve dados e códigos de erro (`not_authenticated`,
+`unsupported_locale` etc.). Toda a tradução da interface fica no frontend, lendo os
+dicionários em `frontend/i18n/strings.<locale>.json` (já com pt-BR, en e es prontos
+com as strings usadas no simulado interativo).
+
+## Próximos passos
+
+O que ainda não está pronto, mas faria sentido implementar:
+
+- **Planos (Gratuito/Profissional/Escola).** Foi desenhado (limite de provas
+  ativas por plano, organizações tipo "escola" com múltiplos professores
+  compartilhando visibilidade) mas ainda não entrou no código.
+- **Múltiplos workers/réplicas.** O `STATE_STORE` do OAuth (`backend/app.py`)
+  e o cooldown de 24h assumem um único processo/réplica. Rodando mais de um
+  worker, isso precisa migrar pra Redis (ou pra uma tabela do Postgres).
+
+Contribuições são bem-vindas — abra uma issue ou mande um PR.
+
+## Licença
+
+Distribuído sob a licença **[AGPL-3.0](LICENSE)**. Em resumo: pode usar, estudar,
+modificar e redistribuir livremente — inclusive rodando sua própria instância —
+desde que o código-fonte (com as suas modificações, se houver) continue
+disponível para quem usa o serviço, e mantendo os créditos originais.
