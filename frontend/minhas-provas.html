@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vecomota — Minhas Provas</title>
+<title id="page-title">Vecomota — Minhas Provas</title>
 <style>
   :root{
     --paper:#FAFAF8;
@@ -123,23 +123,26 @@
 <body>
 
 <header class="top">
-  <a href="minhas-provas.html"><img class="logo" src="assets/logo.png" alt="Vecomota — Vê como tá."></a>
-  <div id="user-box"></div>
+  <a href="minhas-provas.html"><img class="logo" src="assets/logo.png" data-i18n-alt="logo_alt" alt="Vecomota — Vê como tá."></a>
+  <div style="display:flex; align-items:center; gap:14px;">
+    <select id="locale-select" class="btn-ghost" autocomplete="off" style="padding:6px 10px;"></select>
+    <div id="user-box"></div>
+  </div>
 </header>
 
 <main>
 
   <div id="locked" class="panel hide">
-    <h2>Entre pra criar suas provas</h2>
-    <p class="hint">Qualquer conta Google pode criar provas e compartilhar o link com quem quiser.</p>
-    <a class="btn btn-primary" id="login-link" href="#">Entrar com Google</a>
+    <h2 data-i18n="myexams_locked_title">Entre pra criar suas provas</h2>
+    <p class="hint" data-i18n="myexams_locked_hint">Qualquer conta Google pode criar provas e compartilhar o link com quem quiser.</p>
+    <a class="btn btn-primary" id="login-link" href="#" data-i18n="login_with_google">Entrar com Google</a>
   </div>
 
   <div id="app" class="hide">
 
     <div class="panel">
-      <h2>Criar uma prova nova</h2>
-      <p class="hint">
+      <h2 data-i18n="myexams_create_title">Criar uma prova nova</h2>
+      <p class="hint" data-i18n-html="myexams_create_hint">
         Cole o JSON no formato padrão (ou suba um arquivo). Toda questão precisa de uma
         <code>"category"</code> — é o que separa o relatório por assunto depois.
         Sua prova nasce privada: só quem tiver o link consegue acessar.
@@ -147,14 +150,14 @@
       <textarea id="import-textarea" placeholder='{"exams": [ { "exam_type": "outro", "title": "...", "language": "pt-BR", "questions": [ { "category": "...", "question_text": "...", "options": [...] } ] } ]}'></textarea>
       <div class="row">
         <input type="file" id="file-input" accept=".json">
-        <button class="btn-secondary" id="load-example-btn">Carregar exemplo</button>
-        <button class="btn-primary" id="import-btn">Criar prova</button>
+        <button class="btn-secondary" id="load-example-btn" data-i18n="load_example">Carregar exemplo</button>
+        <button class="btn-primary" id="import-btn" data-i18n="myexams_create_btn">Criar prova</button>
       </div>
       <div class="msg" id="import-msg"></div>
     </div>
 
     <div class="panel">
-      <h2>Suas provas</h2>
+      <h2 data-i18n="myexams_list_title">Suas provas</h2>
       <div id="exams-wrap"></div>
     </div>
 
@@ -164,8 +167,8 @@
 <div class="modal-overlay" id="report-modal">
   <div class="modal-box">
     <div class="close-row">
-      <h2 id="report-title" style="margin:0;">Relatório</h2>
-      <button class="btn-secondary" id="report-close-btn">Fechar</button>
+      <h2 id="report-title" style="margin:0;" data-i18n="report_title">Relatório</h2>
+      <button class="btn-secondary" id="report-close-btn" data-i18n="close">Fechar</button>
     </div>
     <div id="report-body"></div>
   </div>
@@ -174,10 +177,10 @@
 <div class="modal-overlay" id="attempt-detail-modal" style="z-index:60;">
   <div class="modal-box">
     <div class="close-row">
-      <h2 id="attempt-detail-title" style="margin:0;">Detalhes da tentativa</h2>
+      <h2 id="attempt-detail-title" style="margin:0;" data-i18n="attempt_detail_title">Detalhes da tentativa</h2>
       <div class="close-actions">
-        <button class="btn-secondary" id="attempt-detail-copy-btn">Copiar</button>
-        <button class="btn-secondary" id="attempt-detail-close-btn">Fechar</button>
+        <button class="btn-secondary" id="attempt-detail-copy-btn" data-i18n="copy">Copiar</button>
+        <button class="btn-secondary" id="attempt-detail-close-btn" data-i18n="close">Fechar</button>
       </div>
     </div>
     <div id="attempt-detail-body"></div>
@@ -185,6 +188,7 @@
 </div>
 
 <script src="app-common.js"></script>
+<script src="i18n.js"></script>
 <script>
 const EXAMPLE_IMPORT_URL = "example_import.json";
 
@@ -196,12 +200,13 @@ async function checkAuth(){
     document.getElementById("locked").classList.remove("hide");
     return;
   }
+  syncLocaleWithAccount(me.data.locale);
   document.getElementById("app").classList.remove("hide");
   document.getElementById("user-box").innerHTML = `
     <img src="${me.data.avatar_url || ''}" alt="">
     <span>${me.data.name || me.data.email}</span>
-    ${me.data.is_admin ? '<a class="btn btn-ghost" href="admin.html">Admin</a>' : ''}
-    <a class="btn btn-ghost" href="/api/auth/logout">Sair</a>
+    ${me.data.is_admin ? `<a class="btn btn-ghost" href="admin.html">${t("nav_admin")}</a>` : ''}
+    <a class="btn btn-ghost" href="/api/auth/logout">${t("logout")}</a>
   `;
   loadMyExams();
 }
@@ -219,7 +224,7 @@ document.getElementById("load-example-btn").addEventListener("click", async () =
     const res = await fetch(EXAMPLE_IMPORT_URL);
     document.getElementById("import-textarea").value = await res.text();
   }catch(e){
-    showMsg("import-msg", "error", "Não achei o arquivo de exemplo — cole o JSON manualmente.");
+    showMsg("import-msg", "error", t("myexams_example_not_found"));
   }
 });
 
@@ -229,7 +234,7 @@ document.getElementById("import-btn").addEventListener("click", async () => {
   try{
     payload = JSON.parse(raw);
   }catch(e){
-    showMsg("import-msg", "error", "JSON inválido: " + e.message);
+    showMsg("import-msg", "error", t("myexams_invalid_json", { message: e.message }));
     return;
   }
   const res = await api("/api/my/exams/import", {
@@ -238,10 +243,10 @@ document.getElementById("import-btn").addEventListener("click", async () => {
     body: JSON.stringify(payload),
   });
   if (res.ok){
-    showMsg("import-msg", "ok", `Prova criada — ${res.data.count} prova(s). Copie o link abaixo pra compartilhar.`);
+    showMsg("import-msg", "ok", t("myexams_created", { count: res.data.count }));
     loadMyExams();
   } else {
-    showMsg("import-msg", "error", "Não deu pra criar:", (res.data && res.data.details) || [(res.data && res.data.error) || "erro desconhecido"]);
+    showMsg("import-msg", "error", t("myexams_create_failed"), (res.data && res.data.details) || [(res.data && res.data.error) || t("unknown_error")]);
   }
 });
 
@@ -249,17 +254,17 @@ async function loadMyExams(){
   const res = await api("/api/my/exams");
   const wrap = document.getElementById("exams-wrap");
   if (!res.ok){
-    wrap.innerHTML = `<p class="empty-state">Não foi possível carregar suas provas.</p>`;
+    wrap.innerHTML = `<p class="empty-state">${t("myexams_load_failed")}</p>`;
     return;
   }
   if (res.data.length === 0){
-    wrap.innerHTML = `<p class="empty-state">Você ainda não criou nenhuma prova.</p>`;
+    wrap.innerHTML = `<p class="empty-state">${t("myexams_empty")}</p>`;
     return;
   }
   wrap.innerHTML = `
     <table>
       <thead>
-        <tr><th>Título</th><th>Idioma</th><th>Questões</th><th>Tentativas</th><th>Visível</th><th>Ações</th></tr>
+        <tr><th>${t("th_title")}</th><th>${t("th_language")}</th><th>${t("th_questions")}</th><th>${t("th_attempts")}</th><th>${t("th_visibility")}</th><th>${t("th_actions")}</th></tr>
       </thead>
       <tbody id="exams-tbody"></tbody>
     </table>
@@ -273,12 +278,12 @@ async function loadMyExams(){
       <td>${e.language}</td>
       <td>${e.question_count}</td>
       <td>${e.attempt_count}</td>
-      <td><span class="badge ${e.is_public ? "public" : "hidden"}">${e.is_public ? "pública" : "privada"}</span></td>
+      <td><span class="badge ${e.is_public ? "public" : "hidden"}">${e.is_public ? t("visibility_public") : t("visibility_private")}</span></td>
       <td class="actions">
-        <a class="btn-secondary" href="simulado-interativo.html?exam=${e.id}" target="_blank">Abrir</a>
-        <button class="btn-secondary copy-link-btn">Copiar link</button>
-        <button class="btn-secondary report-btn">Relatório</button>
-        <button class="btn-danger delete-btn">Excluir</button>
+        <a class="btn-secondary" href="simulado-interativo.html?exam=${e.id}" target="_blank">${t("open")}</a>
+        <button class="btn-secondary copy-link-btn">${t("copy_link")}</button>
+        <button class="btn-secondary report-btn">${t("report_title")}</button>
+        <button class="btn-danger delete-btn">${t("delete")}</button>
       </td>
     </tr>
   `).join("");
@@ -300,7 +305,7 @@ async function loadMyExams(){
   tbody.querySelectorAll(".delete-btn").forEach(btn => {
     btn.addEventListener("click", async (e) => {
       const tr = e.target.closest("tr");
-      if (!confirm(`Excluir "${tr.dataset.title}"? Isso também apaga o histórico de quem já respondeu. Não dá pra desfazer.`)) return;
+      if (!confirm(t("myexams_delete_confirm", { title: tr.dataset.title }))) return;
       await api(`/api/exams/${tr.dataset.id}`, { method: "DELETE" });
       loadMyExams();
     });
@@ -309,7 +314,8 @@ async function loadMyExams(){
 
 initReportModal();
 initAttemptDetailModal();
-checkAuth();
+onI18nReady(() => { document.getElementById("page-title").textContent = t("myexams_page_title"); });
+initI18n().then(checkAuth);
 </script>
 
 </body>

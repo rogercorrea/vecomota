@@ -368,13 +368,16 @@
   }
   .exam-meta span{ background:#EEF1FA; padding:4px 10px; border-radius:12px; color:var(--pine-deep); }
 </style>
-<title>Vecomota — Fazer prova</title>
+<title id="page-title">Vecomota — Fazer prova</title>
 </head>
 <body>
 
 <header class="top">
-  <a href="minhas-provas.html"><img class="logo" src="assets/logo.png" alt="Vecomota — Vê como tá."></a>
-  <h1 id="header-title">Carregando prova...</h1>
+  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+    <a href="minhas-provas.html"><img class="logo" src="assets/logo.png" data-i18n-alt="logo_alt" alt="Vecomota — Vê como tá."></a>
+    <select id="locale-select" class="ui" autocomplete="off" style="padding:6px 10px; border:1px solid var(--paper-line); border-radius:3px; background:#FFFFFF; color:var(--ink);"></select>
+  </div>
+  <h1 id="header-title" data-i18n="loading_exam">Carregando prova...</h1>
   <div class="ui sub" id="header-sub"></div>
 </header>
 
@@ -383,20 +386,20 @@
   <!-- Tela de carregamento -->
   <div class="state-screen" id="screen-loading">
     <div class="spinner"></div>
-    <p>Carregando...</p>
+    <p data-i18n="loading">Carregando...</p>
   </div>
 
   <!-- Tela de erro (sem exam/token na URL, prova não encontrada, etc.) -->
   <div class="state-screen" id="screen-error" style="display:none;">
-    <h2>Não foi possível abrir essa prova</h2>
-    <p id="error-detail">Verifique o link recebido.</p>
+    <h2 data-i18n="exam_open_error_title">Não foi possível abrir essa prova</h2>
+    <p id="error-detail" data-i18n="exam_check_link">Verifique o link recebido.</p>
   </div>
 
   <!-- Tela de login necessário -->
   <div class="state-screen" id="screen-login" style="display:none;">
-    <h2>Entre pra responder</h2>
-    <p>É preciso estar logado pra que sua nota fique registrada no seu histórico.</p>
-    <a class="btn" id="login-link" href="#">Entrar com Google</a>
+    <h2 data-i18n="login_to_answer_title">Entre pra responder</h2>
+    <p data-i18n="login_to_answer_hint">É preciso estar logado pra que sua nota fique registrada no seu histórico.</p>
+    <a class="btn" id="login-link" href="#" data-i18n="login_with_google">Entrar com Google</a>
   </div>
 
   <!-- Tela inicial da prova (antes de começar a valer o tempo) -->
@@ -405,7 +408,7 @@
     <p id="start-description"></p>
     <div class="exam-meta" id="start-meta"></div>
     <div id="start-history" class="panel ui" style="text-align:left; max-width:420px; margin:0 auto 16px;"></div>
-    <button id="start-btn">Começar a prova</button>
+    <button id="start-btn" data-i18n="start_exam">Começar a prova</button>
     <div id="cooldown-msg" class="ui" style="display:none; margin-top:10px; font-size:.85rem; color:var(--ink-soft);"></div>
   </div>
 
@@ -414,7 +417,7 @@
 
     <div class="timer-badge ui" id="timer-badge"></div>
 
-    <div class="integrity-banner ui" id="integrity-banner">
+    <div class="integrity-banner ui" id="integrity-banner" data-i18n="integrity_banner_text">
       🔎 Monitoramento de foco está ativo nesta prova: o sistema registra se você trocar de aba,
       sair da janela com o mouse ou tentar copiar o enunciado. Isso é um indicador para revisão
       humana — não reprova ninguém automaticamente.
@@ -422,18 +425,18 @@
 
     <div class="result-banner panel" id="result-banner">
       <div class="score" id="result-score">0/0</div>
-      <div class="ui" style="color:var(--ink-soft); margin-top:4px;">registrado no seu histórico</div>
+      <div class="ui" style="color:var(--ink-soft); margin-top:4px;" data-i18n="result_registered">registrado no seu histórico</div>
       <div id="pass-badge-wrap"></div>
       <div class="by-area" id="result-by-area"></div>
-      <button type="button" id="view-detail-btn" style="margin-top:10px; background:transparent; color:var(--pine-deep); border:1.5px solid var(--pine-deep);">Ver detalhes</button>
+      <button type="button" id="view-detail-btn" style="margin-top:10px; background:transparent; color:var(--pine-deep); border:1.5px solid var(--pine-deep);" data-i18n="view_details">Ver detalhes</button>
       <div class="integrity-summary ui" id="integrity-summary"></div>
     </div>
 
     <form id="quiz-form"></form>
 
     <div class="actions">
-      <button type="button" id="submit-btn" class="ui">Corrigir prova</button>
-      <button type="button" id="retry-btn" class="ui" style="display:none; background:transparent; color:var(--pine-deep); border:1.5px solid var(--pine-deep);" onclick="location.reload()">Fazer de novo</button>
+      <button type="button" id="submit-btn" class="ui" data-i18n="submit_exam">Corrigir prova</button>
+      <button type="button" id="retry-btn" class="ui" style="display:none; background:transparent; color:var(--pine-deep); border:1.5px solid var(--pine-deep);" onclick="location.reload()" data-i18n="retry_from_scratch">Fazer de novo</button>
     </div>
 
   </div>
@@ -443,31 +446,32 @@
 <div class="warning-overlay ui" id="mouse-leave-warning">
   <div class="warning-modal">
     <div class="icon">⚠️</div>
-    <h3>Atenção</h3>
-    <p>
+    <h3 data-i18n="warning_title">Atenção</h3>
+    <p data-i18n="mouse_leave_warning_text">
       Detectamos que o mouse saiu da área da prova. Isso fica registrado e, em caso de
       revisão, comportamentos suspeitos repetidos podem levar à desclassificação.
       Continue normalmente se foi sem querer.
     </p>
-    <button type="button" id="warning-ack-btn">Entendi, continuar</button>
+    <button type="button" id="warning-ack-btn" data-i18n="warning_ack">Entendi, continuar</button>
   </div>
 </div>
 
 <div class="modal-overlay ui" id="detail-modal">
   <div class="modal-box">
     <div class="close-row">
-      <h3 id="detail-title">Detalhes da tentativa</h3>
+      <h3 id="detail-title" data-i18n="attempt_detail_title">Detalhes da tentativa</h3>
       <div style="display:flex; gap:8px; flex-shrink:0;">
-        <button type="button" id="detail-copy-btn" style="background:transparent; color:var(--pine-deep); border:1px solid var(--paper-line);">Copiar</button>
-        <button type="button" id="detail-close-btn" style="background:transparent; color:var(--ink-soft);">Fechar ✕</button>
+        <button type="button" id="detail-copy-btn" style="background:transparent; color:var(--pine-deep); border:1px solid var(--paper-line);" data-i18n="copy">Copiar</button>
+        <button type="button" id="detail-close-btn" style="background:transparent; color:var(--ink-soft);" data-i18n="close_x">Fechar ✕</button>
       </div>
     </div>
     <div id="detail-body"></div>
   </div>
 </div>
 
-<footer>Suas respostas e seu histórico ficam vinculados à sua conta.</footer>
+<footer data-i18n="footer_privacy">Suas respostas e seu histórico ficam vinculados à sua conta.</footer>
 
+<script src="i18n.js"></script>
 <script>
 // ---------- Utilidades de API ----------
 async function api(path, options = {}){
@@ -505,8 +509,7 @@ function logAuditEvent(type, meta = {}){
 // ---------- Carregamento inicial ----------
 async function init(){
   if (!EXAM_ID_PARAM && !TOKEN_PARAM){
-    document.getElementById("error-detail").textContent =
-      "Faltam parâmetros na URL — use ?exam=<id> ou ?token=<link de compartilhamento>.";
+    document.getElementById("error-detail").textContent = t("exam_missing_params");
     showScreen("screen-error");
     return;
   }
@@ -518,6 +521,7 @@ async function init(){
     showScreen("screen-login");
     return;
   }
+  syncLocaleWithAccount(me.data.locale);
 
   const examRes = TOKEN_PARAM
     ? await api(`/api/exams/shared/${TOKEN_PARAM}`)
@@ -525,7 +529,7 @@ async function init(){
 
   if (!examRes.ok){
     document.getElementById("error-detail").textContent =
-      examRes.status === 404 ? "Essa prova não existe (ou não está mais disponível pra você)." : "Erro ao carregar a prova.";
+      examRes.status === 404 ? t("exam_not_found") : t("exam_load_error");
     showScreen("screen-error");
     return;
   }
@@ -533,7 +537,7 @@ async function init(){
   exam = examRes.data;
   document.getElementById("header-title").textContent = exam.title;
   document.getElementById("header-sub").textContent =
-    `${exam.questions.length} questões` + (exam.description ? " · " + exam.description : "");
+    t("question_count", { n: exam.questions.length }) + (exam.description ? " · " + exam.description : "");
 
   await showStartScreen();
 }
@@ -543,10 +547,10 @@ async function showStartScreen(){
   document.getElementById("start-description").textContent = exam.description || "";
 
   const meta = [];
-  meta.push(exam.time_limit_minutes ? `⏱ ${exam.time_limit_minutes} min` : "⏱ sem limite de tempo");
-  if (exam.passing_score_percent !== null) meta.push(`✓ nota mínima ${exam.passing_score_percent}%`);
-  if (exam.anti_cheat_enabled) meta.push("🔎 monitoramento de foco ativo");
-  if (exam.copy_protection_enabled) meta.push("🔒 cópia bloqueada");
+  meta.push(exam.time_limit_minutes ? t("meta_time_limit", { n: exam.time_limit_minutes }) : t("meta_no_time_limit"));
+  if (exam.passing_score_percent !== null) meta.push(t("meta_passing_score", { pct: exam.passing_score_percent }));
+  if (exam.anti_cheat_enabled) meta.push(t("meta_anti_cheat"));
+  if (exam.copy_protection_enabled) meta.push(t("meta_copy_protection"));
   document.getElementById("start-meta").innerHTML = meta.map(m => `<span>${m}</span>`).join("");
 
   const histWrap = document.getElementById("start-history");
@@ -557,18 +561,18 @@ async function showStartScreen(){
     const best = hist.data.reduce((a,b) => b.score > a.score ? b : a, hist.data[0]);
     const rows = hist.data.slice().reverse().map(a => `
       <div class="attempt-line">
-        <span><b>${a.score}/${a.total}</b> · ${new Date(a.submitted_at).toLocaleDateString("pt-BR")}${a.passed === false ? " · abaixo da nota mínima" : ""}</span>
-        <button type="button" class="btn-small detail-link-btn" data-attempt="${a.id}">Detalhes</button>
+        <span><b>${a.score}/${a.total}</b> · ${new Date(a.submitted_at).toLocaleDateString(dateLocale())}${a.passed === false ? " · " + t("below_passing_score") : ""}</span>
+        <button type="button" class="btn-small detail-link-btn" data-attempt="${a.id}">${t("details")}</button>
       </div>`).join("");
-    histWrap.innerHTML = `<strong class="ui">Seu histórico nessa prova</strong><br class="ui">
-      <span class="ui">Última tentativa: ${last.score}/${last.total} · Melhor: ${best.score}/${best.total} · ${hist.data.length} tentativa(s)</span>
+    histWrap.innerHTML = `<strong class="ui">${t("your_history_here")}</strong><br class="ui">
+      <span class="ui">${t("history_summary", { last_score: last.score, last_total: last.total, best_score: best.score, best_total: best.total, count: hist.data.length })}</span>
       <div id="history-list">${rows}</div>`;
     histWrap.querySelectorAll(".detail-link-btn").forEach(btn => {
       btn.addEventListener("click", () => openAttemptDetail(btn.dataset.attempt));
     });
     retryAt = new Date(last.submitted_at).getTime() + RETRY_COOLDOWN_MS;
   } else {
-    histWrap.innerHTML = `<span class="ui" style="color:var(--ink-soft);">Você ainda não tentou essa prova.</span>`;
+    histWrap.innerHTML = `<span class="ui" style="color:var(--ink-soft);">${t("no_attempts_yet")}</span>`;
   }
 
   applyCooldown(retryAt);
@@ -582,8 +586,10 @@ function formatRemaining(ms){
   const totalMin = Math.max(0, Math.ceil(ms / 60000));
   const h = Math.floor(totalMin / 60);
   const m = totalMin % 60;
-  if (h > 0) return `${h}h${m > 0 ? ` ${m}min` : ""}`;
-  return `${m}min`;
+  const hUnit = t("unit_hour_short");
+  const mUnit = t("unit_minute_short");
+  if (h > 0) return `${h}${hUnit}${m > 0 ? ` ${m}${mUnit}` : ""}`;
+  return `${m}${mUnit}`;
 }
 
 function applyCooldown(retryAt){
@@ -601,7 +607,7 @@ function applyCooldown(retryAt){
     }
     btn.disabled = true;
     msg.style.display = "block";
-    msg.textContent = `Você já fez essa prova recentemente. Pra refazer, espere mais ${formatRemaining(remaining)}.`;
+    msg.textContent = t("cooldown_message", { remaining: formatRemaining(remaining) });
   };
 
   tick();
@@ -615,7 +621,7 @@ document.getElementById("start-btn").addEventListener("click", async () => {
       applyCooldown(new Date(res.data.retry_at).getTime());
       return;
     }
-    alert("Não foi possível iniciar a prova. Tente recarregar a página.");
+    alert(t("start_exam_failed"));
     return;
   }
   attemptId = res.data.attempt_id;
@@ -634,16 +640,16 @@ let lastAttemptDetail = null;
 /* Monta o texto plano de um relatório de tentativa — pensado pra colar
    direto numa IA e pedir um plano de estudo em cima do que foi errado. */
 function attemptDetailToText(data){
-  const lines = [`Resultado: ${data.score}/${data.total} acertos`, ""];
+  const lines = [t("attempt_result_line", { score: data.score, total: data.total }), ""];
   data.questions.forEach((q, i) => {
     const correctOpt = q.options.find(o => o.is_correct);
     const chosenOpt = q.chosen_option_id !== null ? q.options.find(o => o.id === q.chosen_option_id) : null;
-    const status = q.is_correct ? "ACERTOU" : (chosenOpt ? "ERROU" : "NÃO RESPONDIDA");
-    lines.push(`Questão ${i + 1} · ${q.category_name} — ${status}`);
-    lines.push(`Pergunta: ${q.question_text}`);
-    if (!q.is_correct && chosenOpt) lines.push(`Sua resposta: ${chosenOpt.label}) ${chosenOpt.option_text} (errada)`);
-    if (correctOpt) lines.push(`Resposta certa: ${correctOpt.label}) ${correctOpt.option_text}`);
-    if (q.explanation) lines.push(`Explicação: ${q.explanation}`);
+    const status = q.is_correct ? t("status_correct_caps") : (chosenOpt ? t("status_wrong_caps") : t("status_unanswered_caps"));
+    lines.push(t("attempt_question_line", { n: i + 1, category: q.category_name, status }));
+    lines.push(t("attempt_question_prefix", { text: q.question_text }));
+    if (!q.is_correct && chosenOpt) lines.push(t("attempt_your_answer", { label: chosenOpt.label, text: chosenOpt.option_text }));
+    if (correctOpt) lines.push(t("attempt_correct_answer", { label: correctOpt.label, text: correctOpt.option_text }));
+    if (q.explanation) lines.push(t("attempt_explanation_line", { text: q.explanation }));
     lines.push("");
   });
   return lines.join("\n");
@@ -653,32 +659,32 @@ async function openAttemptDetail(attemptId){
   const modal = document.getElementById("detail-modal");
   const body = document.getElementById("detail-body");
   lastAttemptDetail = null;
-  body.innerHTML = `<p class="ui" style="color:var(--ink-soft);">Carregando...</p>`;
+  body.innerHTML = `<p class="ui" style="color:var(--ink-soft);">${t("loading")}</p>`;
   modal.classList.add("show");
 
   const res = await api(`/api/exams/${exam.id}/attempts/${attemptId}/detail`);
   if (!res.ok){
-    body.innerHTML = `<p class="ui" style="color:var(--wrong);">Não foi possível carregar os detalhes dessa tentativa.</p>`;
+    body.innerHTML = `<p class="ui" style="color:var(--wrong);">${t("attempt_detail_load_failed")}</p>`;
     return;
   }
 
   lastAttemptDetail = res.data;
   document.getElementById("detail-title").textContent =
-    `Detalhes — ${res.data.score}/${res.data.total} acertos`;
+    t("attempt_detail_title_with_score", { score: res.data.score, total: res.data.total });
 
   body.innerHTML = res.data.questions.map((q, i) => {
     const correctOpt = q.options.find(o => o.is_correct);
     const chosenOpt = q.chosen_option_id !== null ? q.options.find(o => o.id === q.chosen_option_id) : null;
-    const statusText = q.is_correct ? "✓ Acertou" : (chosenOpt ? "✗ Errou" : "— Não respondida");
+    const statusText = q.is_correct ? t("status_correct") : (chosenOpt ? t("status_wrong") : t("status_unanswered"));
 
     let answerHtml = "";
     if (!q.is_correct && chosenOpt){
-      answerHtml += `<div class="opt-line ui is-chosen-wrong">Sua resposta: ${chosenOpt.label}) ${chosenOpt.option_text} (errada)</div>`;
+      answerHtml += `<div class="opt-line ui is-chosen-wrong">${t("attempt_your_answer", { label: chosenOpt.label, text: chosenOpt.option_text })}</div>`;
     } else if (!q.is_correct && !chosenOpt){
-      answerHtml += `<div class="opt-line ui" style="font-style:italic;">Não respondida</div>`;
+      answerHtml += `<div class="opt-line ui" style="font-style:italic;">${t("status_unanswered_plain")}</div>`;
     }
     if (correctOpt){
-      answerHtml += `<div class="opt-line ui is-correct">Resposta certa: ${correctOpt.label}) ${correctOpt.option_text}</div>`;
+      answerHtml += `<div class="opt-line ui is-correct">${t("attempt_correct_answer", { label: correctOpt.label, text: correctOpt.option_text })}</div>`;
     }
 
     return `
@@ -686,12 +692,12 @@ async function openAttemptDetail(attemptId){
       <div class="qnum">
         <span class="mark ${q.is_correct ? "right" : "wrong"}">${statusText}</span>
         <span class="ui" style="text-transform:uppercase; font-size:.68rem; letter-spacing:.08em; color:var(--ink-soft);">
-          Questão ${i + 1} · ${q.category_name}
+          ${t("question_label", { n: i + 1, category: q.category_name })}
         </span>
       </div>
       <div class="qtext">${q.question_text}</div>
       ${answerHtml}
-      ${q.explanation ? `<div class="explain show ui">Explicação: ${q.explanation}</div>` : ""}
+      ${q.explanation ? `<div class="explain show ui">${t("attempt_explanation_line", { text: q.explanation })}</div>` : ""}
     </div>`;
   }).join("");
 }
@@ -702,10 +708,10 @@ async function copyAttemptDetail(btnEl){
   try {
     await navigator.clipboard.writeText(text);
     const original = btnEl.textContent;
-    btnEl.textContent = "Copiado!";
+    btnEl.textContent = t("copied");
     setTimeout(() => { btnEl.textContent = original; }, 1500);
   } catch (err) {
-    prompt("Copie o relatório:", text);
+    prompt(t("copy_report_prompt"), text);
   }
 }
 
@@ -728,7 +734,7 @@ function renderQuiz(){
     const card = document.createElement("div");
     card.className = "panel qcard";
     card.innerHTML = `
-      <span class="qnum ui">Questão ${q.position} · ${q.category.name}</span>
+      <span class="qnum ui">${t("question_label", { n: q.position, category: q.category.name })}</span>
       <div class="qtext">${q.question_text}</div>
       <div class="opts" data-qid="${q.id}"></div>
       <div class="explain ui" data-qid="${q.id}"></div>
@@ -814,7 +820,7 @@ function setupTimer(){
   const badge = document.getElementById("timer-badge");
   if (deadlineAt === null){
     badge.classList.add("show");
-    badge.textContent = "⏱ Prova sem limite de tempo";
+    badge.textContent = t("timer_no_limit");
     return;
   }
   badge.classList.add("show");
@@ -823,11 +829,11 @@ function setupTimer(){
     if (graded){ clearInterval(timerInterval); return; }
     const remainingMs = deadlineAt - Date.now();
     const remainingSec = Math.max(0, Math.floor(remainingMs / 1000));
-    badge.textContent = `⏱ Tempo restante: ${formatClock(remainingSec)}`;
+    badge.textContent = t("timer_remaining", { clock: formatClock(remainingSec) });
     badge.classList.toggle("low-time", remainingSec <= 60);
     if (remainingMs <= 0){
       clearInterval(timerInterval);
-      badge.textContent = "⏱ Tempo esgotado — enviando automaticamente...";
+      badge.textContent = t("timer_expired");
       gradeQuiz();
     }
   };
@@ -839,7 +845,7 @@ function setupTimer(){
 document.getElementById("submit-btn").addEventListener("click", () => {
   const unanswered = exam.questions.find(q => answers[q.id] === undefined);
   if (unanswered){
-    alert(`Ainda falta responder a questão ${unanswered.position}.`);
+    alert(t("missing_answer", { n: unanswered.position }));
     return;
   }
   gradeQuiz();
@@ -859,7 +865,7 @@ async function gradeQuiz(){
   });
 
   if (!res.ok){
-    alert("Não foi possível enviar sua prova. Verifique sua conexão e tente novamente.");
+    alert(t("submit_failed"));
     graded = false;
     document.getElementById("submit-btn").style.display = "inline-block";
     return;
@@ -901,21 +907,21 @@ async function gradeQuiz(){
   let badgeHtml = "";
   if (result.passed !== null){
     badgeHtml += result.passed
-      ? `<span class="pass-badge pass ui">✓ Aprovado — nota mínima ${result.passing_score_percent}%</span>`
-      : `<span class="pass-badge fail ui">Abaixo da nota mínima (${result.passing_score_percent}%)</span>`;
+      ? `<span class="pass-badge pass ui">${t("passed_badge", { pct: result.passing_score_percent })}</span>`
+      : `<span class="pass-badge fail ui">${t("failed_badge", { pct: result.passing_score_percent })}</span>`;
   }
-  if (result.late) badgeHtml += ` <span class="pass-badge fail ui">Enviado após o tempo limite</span>`;
+  if (result.late) badgeHtml += ` <span class="pass-badge fail ui">${t("late_badge")}</span>`;
   document.getElementById("pass-badge-wrap").innerHTML = badgeHtml;
 
   const parts = [];
   if (exam.anti_cheat_enabled){
-    parts.push(`trocas de aba: ${integrity.tab_switches}`);
-    parts.push(`mouse fora da área: ${integrity.mouse_leaves}`);
+    parts.push(t("integrity_tab_switches", { n: integrity.tab_switches }));
+    parts.push(t("integrity_mouse_leaves", { n: integrity.mouse_leaves }));
   }
-  if (exam.copy_protection_enabled) parts.push(`tentativas de copiar: ${integrity.copy_attempts}`);
+  if (exam.copy_protection_enabled) parts.push(t("integrity_copy_attempts", { n: integrity.copy_attempts }));
   if (parts.length){
     document.getElementById("integrity-summary").textContent =
-      `Indicadores (apenas informativos, sujeitos a revisão humana) — ${parts.join(" · ")}`;
+      t("integrity_summary_prefix") + " — " + parts.join(" · ");
   }
 
   // Auditoria vai separada, depois da correção — não trava a nota se falhar.
@@ -930,7 +936,8 @@ async function gradeQuiz(){
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-init();
+onI18nReady(() => { document.getElementById("page-title").textContent = t("simulado_page_title"); });
+initI18n().then(init);
 </script>
 
 </body>

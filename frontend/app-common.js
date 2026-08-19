@@ -30,10 +30,10 @@ async function copyShareLink(token, btnEl) {
   try {
     await navigator.clipboard.writeText(url);
     const original = btnEl.textContent;
-    btnEl.textContent = "Copiado!";
+    btnEl.textContent = t("copied");
     setTimeout(() => { btnEl.textContent = original; }, 1500);
   } catch (err) {
-    prompt("Copie o link:", url);
+    prompt(t("copy_link_prompt"), url);
   }
 }
 
@@ -43,13 +43,13 @@ async function openReport(examId, title) {
   const modalEl = document.getElementById("report-modal");
   if (!titleEl || !bodyEl || !modalEl) return;
 
-  titleEl.textContent = `Relatório — ${title}`;
-  bodyEl.innerHTML = "<p>Carregando...</p>";
+  titleEl.textContent = `${t("report_title")} — ${title}`;
+  bodyEl.innerHTML = `<p>${t("loading")}</p>`;
   modalEl.classList.add("show");
 
   const res = await api(`/api/exams/${examId}/reports`);
   if (!res.ok || !res.data || !res.data.results || res.data.results.length === 0) {
-    bodyEl.innerHTML = "<p>Ainda não há tentativas finalizadas nessa prova.</p>";
+    bodyEl.innerHTML = `<p>${t("report_no_attempts")}</p>`;
     return;
   }
 
@@ -57,7 +57,7 @@ async function openReport(examId, title) {
   res.data.results.forEach(r => r.by_category.forEach(c => categoryMap.set(c.category_id, c.category_name)));
   const categories = [...categoryMap.entries()];
 
-  const header = `<tr><th>Pessoa</th><th>Nota geral</th>${categories.map(([, name]) => `<th>${name}</th>`).join("")}<th>Quando</th><th>Detalhe</th></tr>`;
+  const header = `<tr><th>${t("th_person")}</th><th>${t("th_overall_score")}</th>${categories.map(([, name]) => `<th>${name}</th>`).join("")}<th>${t("th_when")}</th><th>${t("th_detail")}</th></tr>`;
 
   const rows = res.data.results.map(r => {
     const overallCls = pctClass(r.score, r.total);
@@ -66,15 +66,15 @@ async function openReport(examId, title) {
       if (!c) return "<td>—</td>";
       return `<td class="cell-pct ${pctClass(c.correct, c.total)}">${c.correct}/${c.total}</td>`;
     }).join("");
-    const when = new Date(r.submitted_at).toLocaleDateString("pt-BR");
+    const when = new Date(r.submitted_at).toLocaleDateString(dateLocale());
     const passTag = r.passed === true ? " ✓" : r.passed === false ? " ✗" : "";
-    const lateTag = r.late ? " (atrasado)" : "";
+    const lateTag = r.late ? ` (${t("late_tag")})` : "";
     return `<tr>
       <td>${r.user.name || r.user.email}</td>
       <td class="cell-pct ${overallCls}">${r.score}/${r.total}${passTag}${lateTag}</td>
       ${catCells}
       <td>${when}</td>
-      <td class="actions"><button class="btn-secondary" data-attempt-id="${r.attempt_id}">Ver questões</button></td>
+      <td class="actions"><button class="btn-secondary" data-attempt-id="${r.attempt_id}">${t("view_questions")}</button></td>
     </tr>`;
   }).join("");
 
@@ -87,18 +87,18 @@ async function openReport(examId, title) {
 /* Monta o texto plano de um relatório de tentativa — pensado pra colar
    direto numa IA e pedir um plano de estudo em cima do que foi errado. */
 function attemptDetailToText(data) {
-  const lines = [`Resultado: ${data.score}/${data.total} acertos`, ""];
+  const lines = [t("attempt_result_line", { score: data.score, total: data.total }), ""];
   data.questions.forEach((q, i) => {
     const correctOpt = q.options.find(o => o.is_correct);
     const chosenOpt = q.chosen_option_id !== null ? q.options.find(o => o.id === q.chosen_option_id) : null;
-    const status = q.is_correct ? "ACERTOU" : (chosenOpt ? "ERROU" : "NÃO RESPONDIDA");
-    lines.push(`Questão ${i + 1} · ${q.category_name} — ${status}`);
-    lines.push(`Pergunta: ${q.question_text}`);
+    const status = q.is_correct ? t("status_correct_caps") : (chosenOpt ? t("status_wrong_caps") : t("status_unanswered_caps"));
+    lines.push(t("attempt_question_line", { n: i + 1, category: q.category_name, status }));
+    lines.push(t("attempt_question_prefix", { text: q.question_text }));
     if (!q.is_correct && chosenOpt) {
-      lines.push(`Sua resposta: ${chosenOpt.label}) ${chosenOpt.option_text} (errada)`);
+      lines.push(t("attempt_your_answer", { label: chosenOpt.label, text: chosenOpt.option_text }));
     }
-    if (correctOpt) lines.push(`Resposta certa: ${correctOpt.label}) ${correctOpt.option_text}`);
-    if (q.explanation) lines.push(`Explicação: ${q.explanation}`);
+    if (correctOpt) lines.push(t("attempt_correct_answer", { label: correctOpt.label, text: correctOpt.option_text }));
+    if (q.explanation) lines.push(t("attempt_explanation_line", { text: q.explanation }));
     lines.push("");
   });
   return lines.join("\n");
@@ -110,16 +110,16 @@ function renderAttemptDetailHTML(data) {
   return data.questions.map((q, i) => {
     const correctOpt = q.options.find(o => o.is_correct);
     const chosenOpt = q.chosen_option_id !== null ? q.options.find(o => o.id === q.chosen_option_id) : null;
-    const statusText = q.is_correct ? "✓ Acertou" : (chosenOpt ? "✗ Errou" : "— Não respondida");
+    const statusText = q.is_correct ? t("status_correct") : (chosenOpt ? t("status_wrong") : t("status_unanswered"));
 
     let answerHtml = "";
     if (!q.is_correct && chosenOpt) {
-      answerHtml += `<div class="opt-line is-chosen-wrong">Sua resposta: ${chosenOpt.label}) ${chosenOpt.option_text} (errada)</div>`;
+      answerHtml += `<div class="opt-line is-chosen-wrong">${t("attempt_your_answer", { label: chosenOpt.label, text: chosenOpt.option_text })}</div>`;
     } else if (!q.is_correct && !chosenOpt) {
-      answerHtml += `<div class="opt-line" style="font-style:italic;">Não respondida</div>`;
+      answerHtml += `<div class="opt-line" style="font-style:italic;">${t("status_unanswered_plain")}</div>`;
     }
     if (correctOpt) {
-      answerHtml += `<div class="opt-line is-correct">Resposta certa: ${correctOpt.label}) ${correctOpt.option_text}</div>`;
+      answerHtml += `<div class="opt-line is-correct">${t("attempt_correct_answer", { label: correctOpt.label, text: correctOpt.option_text })}</div>`;
     }
 
     return `
@@ -127,12 +127,12 @@ function renderAttemptDetailHTML(data) {
       <div class="qnum">
         <span class="mark ${q.is_correct ? "right" : "wrong"}">${statusText}</span>
         <span style="text-transform:uppercase; font-size:.68rem; letter-spacing:.08em; color:var(--ink-soft);">
-          Questão ${i + 1} · ${q.category_name}
+          ${t("question_label", { n: i + 1, category: q.category_name })}
         </span>
       </div>
       <div class="qtext">${q.question_text}</div>
       ${answerHtml}
-      ${q.explanation ? `<div class="explain">Explicação: ${q.explanation}</div>` : ""}
+      ${q.explanation ? `<div class="explain">${t("attempt_explanation_line", { text: q.explanation })}</div>` : ""}
     </div>`;
   }).join("");
 }
@@ -146,17 +146,17 @@ async function openAttemptDetail(examId, attemptId) {
   if (!titleEl || !bodyEl || !modalEl) return;
 
   lastAttemptDetail = null;
-  bodyEl.innerHTML = "<p>Carregando...</p>";
+  bodyEl.innerHTML = `<p>${t("loading")}</p>`;
   modalEl.classList.add("show");
 
   const res = await api(`/api/exams/${examId}/attempts/${attemptId}/detail`);
   if (!res.ok || !res.data) {
-    bodyEl.innerHTML = "<p>Não foi possível carregar os detalhes dessa tentativa.</p>";
+    bodyEl.innerHTML = `<p>${t("attempt_detail_load_failed")}</p>`;
     return;
   }
 
   lastAttemptDetail = res.data;
-  titleEl.textContent = `Detalhes — ${res.data.score}/${res.data.total} acertos`;
+  titleEl.textContent = t("attempt_detail_title_with_score", { score: res.data.score, total: res.data.total });
   bodyEl.innerHTML = renderAttemptDetailHTML(res.data);
 }
 
@@ -166,10 +166,10 @@ async function copyAttemptDetail(btnEl) {
   try {
     await navigator.clipboard.writeText(text);
     const original = btnEl.textContent;
-    btnEl.textContent = "Copiado!";
+    btnEl.textContent = t("copied");
     setTimeout(() => { btnEl.textContent = original; }, 1500);
   } catch (err) {
-    prompt("Copie o relatório:", text);
+    prompt(t("copy_report_prompt"), text);
   }
 }
 

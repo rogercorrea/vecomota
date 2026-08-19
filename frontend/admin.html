@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vecomota — Admin</title>
+<title id="page-title">Vecomota — Admin</title>
 <style>
   :root{
     --paper:#FAFAF8;
@@ -125,25 +125,28 @@
 
 <header class="top">
   <div style="display:flex; align-items:center; gap:12px;">
-    <a href="minhas-provas.html"><img class="logo" src="assets/logo.png" alt="Vecomota — Vê como tá."></a>
-    <span class="badge admin-badge">Admin</span>
+    <a href="minhas-provas.html"><img class="logo" src="assets/logo.png" data-i18n-alt="logo_alt" alt="Vecomota — Vê como tá."></a>
+    <span class="badge admin-badge" data-i18n="admin_badge">Admin</span>
   </div>
-  <div id="user-box"></div>
+  <div style="display:flex; align-items:center; gap:14px;">
+    <select id="locale-select" class="btn-ghost" autocomplete="off" style="padding:6px 10px;"></select>
+    <div id="user-box"></div>
+  </div>
 </header>
 
 <main>
 
   <div id="locked" class="panel hide">
-    <h2>Acesso restrito</h2>
-    <p class="hint">Entre com uma conta Google autorizada como administradora para gerenciar o conteúdo.</p>
-    <a class="btn btn-primary" href="/api/auth/google/login">Entrar com Google</a>
+    <h2 data-i18n="admin_locked_title">Acesso restrito</h2>
+    <p class="hint" data-i18n="admin_locked_hint">Entre com uma conta Google autorizada como administradora para gerenciar o conteúdo.</p>
+    <a class="btn btn-primary" href="/api/auth/google/login" data-i18n="login_with_google">Entrar com Google</a>
   </div>
 
   <div id="app" class="hide">
 
     <div class="panel">
-      <h2>Importar provas (JSON padrão)</h2>
-      <p class="hint">
+      <h2 data-i18n="admin_import_title">Importar provas (JSON padrão)</h2>
+      <p class="hint" data-i18n-html="admin_import_hint">
         Cole o JSON ou selecione um arquivo. Aceita uma prova única ou um lote com
         <code>"exams": [...]</code> — inclusive várias versões de idioma da mesma prova,
         cada uma com seu próprio <code>"language"</code>.
@@ -151,29 +154,29 @@
       <textarea id="import-textarea" placeholder='{"exams": [ { "exam_type": "...", "title": "...", "language": "pt-BR", "questions": [...] } ]}'></textarea>
       <div class="row">
         <input type="file" id="file-input" accept=".json">
-        <button class="btn-secondary" id="load-example-btn">Carregar exemplo</button>
-        <button class="btn-primary" id="import-btn">Importar</button>
+        <button class="btn-secondary" id="load-example-btn" data-i18n="load_example">Carregar exemplo</button>
+        <button class="btn-primary" id="import-btn" data-i18n="admin_import_btn">Importar</button>
       </div>
       <div class="msg" id="import-msg"></div>
     </div>
 
     <div class="panel">
-      <h2>Novo tipo de prova</h2>
-      <p class="hint">Categorias já existem para Seriado UFMG, ENEM, Concursos, Inglês e TI — crie outras aqui se precisar.</p>
+      <h2 data-i18n="admin_new_type_title">Novo tipo de prova</h2>
+      <p class="hint" data-i18n="admin_new_type_hint">Categorias já existem para Seriado UFMG, ENEM, Concursos, Inglês e TI — crie outras aqui se precisar.</p>
       <div class="row">
-        <input type="text" id="type-slug" placeholder="slug (ex: vestibular_usp)" style="padding:8px; border:1px solid var(--paper-line); border-radius:3px;">
-        <input type="text" id="type-name" placeholder="Nome de exibição (ex: Vestibular USP)" style="padding:8px; border:1px solid var(--paper-line); border-radius:3px; flex:1; min-width:200px;">
-        <button class="btn-primary" id="create-type-btn">Criar tipo</button>
+        <input type="text" id="type-slug" data-i18n-placeholder="admin_type_slug_placeholder" placeholder="slug (ex: vestibular_usp)" style="padding:8px; border:1px solid var(--paper-line); border-radius:3px;">
+        <input type="text" id="type-name" data-i18n-placeholder="admin_type_name_placeholder" placeholder="Nome de exibição (ex: Vestibular USP)" style="padding:8px; border:1px solid var(--paper-line); border-radius:3px; flex:1; min-width:200px;">
+        <button class="btn-primary" id="create-type-btn" data-i18n="admin_create_type_btn">Criar tipo</button>
       </div>
       <div class="msg" id="type-msg"></div>
     </div>
 
     <div class="panel">
-      <h2>Provas cadastradas</h2>
+      <h2 data-i18n="admin_exams_list_title">Provas cadastradas</h2>
       <table>
         <thead>
           <tr>
-            <th>Título</th><th>Dono</th><th>Tipo</th><th>Idioma</th><th>Questões</th><th>Nota mín.</th><th>Tempo</th><th>Visível</th><th>Ações</th>
+            <th data-i18n="th_title">Título</th><th data-i18n="th_owner">Dono</th><th data-i18n="th_type">Tipo</th><th data-i18n="th_language">Idioma</th><th data-i18n="th_questions">Questões</th><th data-i18n="th_min_score">Nota mín.</th><th data-i18n="th_time">Tempo</th><th data-i18n="th_visibility">Visível</th><th data-i18n="th_actions">Ações</th>
           </tr>
         </thead>
         <tbody id="exams-tbody"></tbody>
@@ -186,8 +189,8 @@
 <div class="modal-overlay" id="report-modal">
   <div class="modal-box">
     <div class="close-row">
-      <h2 id="report-title" style="margin:0;">Relatório</h2>
-      <button class="btn-secondary" id="report-close-btn">Fechar</button>
+      <h2 id="report-title" style="margin:0;" data-i18n="report_title">Relatório</h2>
+      <button class="btn-secondary" id="report-close-btn" data-i18n="close">Fechar</button>
     </div>
     <div id="report-body"></div>
   </div>
@@ -196,10 +199,10 @@
 <div class="modal-overlay" id="attempt-detail-modal" style="z-index:60;">
   <div class="modal-box">
     <div class="close-row">
-      <h2 id="attempt-detail-title" style="margin:0;">Detalhes da tentativa</h2>
+      <h2 id="attempt-detail-title" style="margin:0;" data-i18n="attempt_detail_title">Detalhes da tentativa</h2>
       <div class="close-actions">
-        <button class="btn-secondary" id="attempt-detail-copy-btn">Copiar</button>
-        <button class="btn-secondary" id="attempt-detail-close-btn">Fechar</button>
+        <button class="btn-secondary" id="attempt-detail-copy-btn" data-i18n="copy">Copiar</button>
+        <button class="btn-secondary" id="attempt-detail-close-btn" data-i18n="close">Fechar</button>
       </div>
     </div>
     <div id="attempt-detail-body"></div>
@@ -207,6 +210,7 @@
 </div>
 
 <script src="app-common.js"></script>
+<script src="i18n.js"></script>
 <script>
 const EXAMPLE_IMPORT_URL = "example_import.json"; // ajuste o caminho se hospedar em outro lugar
 
@@ -216,19 +220,20 @@ async function checkAuth(){
     document.getElementById("locked").classList.remove("hide");
     return;
   }
+  syncLocaleWithAccount(me.data.locale);
   if (!me.data.is_admin){
     document.getElementById("locked").classList.remove("hide");
     document.getElementById("locked").innerHTML =
-      `<h2>Sem permissão de admin</h2><p class="hint">Você está logada como ${me.data.email}, mas essa conta não tem acesso à área de administração.</p>
-       <a class="btn btn-secondary" href="/api/auth/logout">Trocar de conta</a>`;
+      `<h2>${t("admin_forbidden_title")}</h2><p class="hint">${t("admin_forbidden_hint", { email: me.data.email })}</p>
+       <a class="btn btn-secondary" href="/api/auth/logout">${t("switch_account")}</a>`;
     return;
   }
   document.getElementById("app").classList.remove("hide");
   document.getElementById("user-box").innerHTML = `
     <img src="${me.data.avatar_url || ''}" alt="">
     <span>${me.data.name || me.data.email}</span>
-    <a class="btn btn-ghost" href="minhas-provas.html">Minhas provas</a>
-    <a class="btn btn-ghost" href="/api/auth/logout">Sair</a>
+    <a class="btn btn-ghost" href="minhas-provas.html">${t("nav_my_exams")}</a>
+    <a class="btn btn-ghost" href="/api/auth/logout">${t("logout")}</a>
   `;
   loadExams();
 }
@@ -246,7 +251,7 @@ document.getElementById("load-example-btn").addEventListener("click", async () =
     const res = await fetch(EXAMPLE_IMPORT_URL);
     document.getElementById("import-textarea").value = await res.text();
   }catch(e){
-    showMsg("import-msg", "error", "Não achei o arquivo de exemplo — cole o JSON manualmente.");
+    showMsg("import-msg", "error", t("myexams_example_not_found"));
   }
 });
 
@@ -256,7 +261,7 @@ document.getElementById("import-btn").addEventListener("click", async () => {
   try{
     payload = JSON.parse(raw);
   }catch(e){
-    showMsg("import-msg", "error", "JSON inválido: " + e.message);
+    showMsg("import-msg", "error", t("myexams_invalid_json", { message: e.message }));
     return;
   }
   const res = await api("/api/admin/exams/import", {
@@ -265,10 +270,10 @@ document.getElementById("import-btn").addEventListener("click", async () => {
     body: JSON.stringify(payload),
   });
   if (res.ok){
-    showMsg("import-msg", "ok", `Importado com sucesso — ${res.data.count} prova(s) criada(s).`);
+    showMsg("import-msg", "ok", t("admin_import_success", { count: res.data.count }));
     loadExams();
   } else {
-    showMsg("import-msg", "error", "Falha na importação:", res.data && res.data.details || [res.data && res.data.error || "erro desconhecido"]);
+    showMsg("import-msg", "error", t("admin_import_failed"), res.data && res.data.details || [res.data && res.data.error || t("unknown_error")]);
   }
 });
 
@@ -276,7 +281,7 @@ document.getElementById("create-type-btn").addEventListener("click", async () =>
   const slug = document.getElementById("type-slug").value.trim();
   const name = document.getElementById("type-name").value.trim();
   if (!slug || !name){
-    showMsg("type-msg", "error", "Preencha slug e nome.");
+    showMsg("type-msg", "error", t("admin_fill_slug_and_name"));
     return;
   }
   const res = await api("/api/admin/exam-types", {
@@ -285,11 +290,11 @@ document.getElementById("create-type-btn").addEventListener("click", async () =>
     body: JSON.stringify({ slug, name }),
   });
   if (res.ok){
-    showMsg("type-msg", "ok", `Tipo "${res.data.name}" (${res.data.slug}) pronto para uso.`);
+    showMsg("type-msg", "ok", t("admin_type_ready", { name: res.data.name, slug: res.data.slug }));
     document.getElementById("type-slug").value = "";
     document.getElementById("type-name").value = "";
   } else {
-    showMsg("type-msg", "error", res.data && res.data.error || "erro desconhecido");
+    showMsg("type-msg", "error", res.data && res.data.error || t("unknown_error"));
   }
 });
 
@@ -297,11 +302,11 @@ async function loadExams(){
   const res = await api("/api/admin/exams");
   const tbody = document.getElementById("exams-tbody");
   if (!res.ok){
-    tbody.innerHTML = `<tr><td colspan="9">Não foi possível carregar as provas.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9">${t("admin_exams_load_failed")}</td></tr>`;
     return;
   }
   if (res.data.length === 0){
-    tbody.innerHTML = `<tr><td colspan="9">Nenhuma prova cadastrada ainda.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9">${t("admin_exams_empty")}</td></tr>`;
     return;
   }
   tbody.innerHTML = res.data.map(e => `
@@ -312,13 +317,13 @@ async function loadExams(){
       <td>${e.language}</td>
       <td>${e.question_count}</td>
       <td>${e.passing_score_percent !== null ? e.passing_score_percent + "%" : "—"}</td>
-      <td>${e.time_limit_minutes !== null ? e.time_limit_minutes + " min" : "sem limite"}</td>
-      <td><span class="badge ${e.is_public ? "public" : "hidden"}">${e.is_public ? "pública" : "oculta"}</span></td>
+      <td>${e.time_limit_minutes !== null ? t("minutes_short", { n: e.time_limit_minutes }) : t("no_time_limit")}</td>
+      <td><span class="badge ${e.is_public ? "public" : "hidden"}">${e.is_public ? t("visibility_public") : t("visibility_hidden")}</span></td>
       <td class="actions">
-        <button class="btn-secondary toggle-btn">${e.is_public ? "Ocultar" : "Publicar"}</button>
-        <button class="btn-secondary copy-link-btn" data-token="${e.share_token}">Copiar link</button>
-        <button class="btn-secondary report-btn">Relatório</button>
-        <button class="btn-danger delete-btn">Excluir</button>
+        <button class="btn-secondary toggle-btn" data-public="${e.is_public}">${e.is_public ? t("hide") : t("publish")}</button>
+        <button class="btn-secondary copy-link-btn" data-token="${e.share_token}">${t("copy_link")}</button>
+        <button class="btn-secondary report-btn">${t("report_title")}</button>
+        <button class="btn-danger delete-btn">${t("delete")}</button>
       </td>
     </tr>
   `).join("");
@@ -327,7 +332,7 @@ async function loadExams(){
     btn.addEventListener("click", async (e) => {
       const tr = e.target.closest("tr");
       const id = tr.dataset.id;
-      const currentlyPublic = e.target.textContent.trim() === "Ocultar";
+      const currentlyPublic = e.target.dataset.public === "true";
       await api(`/api/exams/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -353,7 +358,7 @@ async function loadExams(){
       const tr = e.target.closest("tr");
       const id = tr.dataset.id;
       const title = tr.dataset.title;
-      if (!confirm(`Excluir "${title}"? Isso também apaga o histórico de tentativas dessa prova. Não dá pra desfazer.`)) return;
+      if (!confirm(t("admin_delete_confirm", { title }))) return;
       await api(`/api/exams/${id}`, { method: "DELETE" });
       loadExams();
     });
@@ -362,7 +367,8 @@ async function loadExams(){
 
 initReportModal();
 initAttemptDetailModal();
-checkAuth();
+onI18nReady(() => { document.getElementById("page-title").textContent = t("admin_page_title"); });
+initI18n().then(checkAuth);
 </script>
 
 </body>
