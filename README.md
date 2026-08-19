@@ -41,8 +41,9 @@ aprender com o código.
   pro outro.
 - 🕵️ **Monitoramento de foco e proteção de cópia opcionais** — indicadores pra
   revisão humana, nunca reprovação automática nem rastreamento oculto.
-- 🌎 **i18n de verdade**: idioma da interface e idioma do conteúdo da prova são
-  eixos independentes (pt-BR, en, es).
+- 🌎 **Interface em pt-BR, en-US ou es**, com seletor de idioma (bandeiras) em
+  toda tela — idioma da interface e idioma do conteúdo da prova são eixos
+  independentes.
 - 🛠️ **Painel de admin** pra curar um catálogo público oficial, separado das provas
   privadas de cada usuário.
 
@@ -174,7 +175,8 @@ vecomota/
 │   └── example_import.json   # exemplo do formato JSON padrão (2 provas, categorias diferentes)
 ├── frontend/
 │   ├── assets/logo.png            # identidade visual
-│   ├── i18n/                      # dicionários de interface (pt-BR, en, es)
+│   ├── i18n/                      # dicionários de interface (pt-BR, en, es — 142 chaves)
+│   ├── i18n.js                    # módulo de i18n compartilhado pelas 3 telas
 │   ├── app-common.js              # funções JS compartilhadas (admin.html + minhas-provas.html)
 │   ├── admin.html                 # tela de admin (importação, catálogo, relatórios)
 │   ├── minhas-provas.html         # autoatendimento: qualquer usuário cria/gerencia suas provas
@@ -361,9 +363,39 @@ São dois eixos independentes, tratados separadamente de propósito:
   campo, separado do `?type=`.
 
 O backend não traduz nada — ele só devolve dados e códigos de erro (`not_authenticated`,
-`unsupported_locale` etc.). Toda a tradução da interface fica no frontend, lendo os
-dicionários em `frontend/i18n/strings.<locale>.json` (já com pt-BR, en e es prontos
-com as strings usadas no simulado interativo).
+`unsupported_locale` etc.). Toda a tradução da interface fica no frontend.
+
+### Como funciona o i18n do frontend
+
+`frontend/i18n.js` é o módulo compartilhado pelas 3 telas (`admin.html`,
+`minhas-provas.html`, `simulado-interativo.html`), lido a partir dos dicionários
+completos em `frontend/i18n/strings.<locale>.json` (pt-BR, en, es — 142 chaves,
+cobrindo desde texto estático até mensagens de erro e templates com variável).
+
+- **Prioridade pra decidir o idioma inicial**: escolha manual salva neste
+  navegador (`localStorage`) → preferência salva na conta (`users.locale`) →
+  idioma do navegador (`navigator.languages`) → `pt-BR` como último fallback.
+- **Texto estático** vira `<span data-i18n="chave">`, `data-i18n-placeholder`,
+  `data-i18n-title`, `data-i18n-alt` ou `data-i18n-html` (esse último quando o
+  texto tem markup embutido, tipo um `<code>` dentro da frase) — `i18n.js`
+  aplica tudo sozinho ao carregar e a cada troca de idioma.
+- **Texto gerado em JS** (tabelas, mensagens de erro, templates com contagem/
+  nota/data) usa `t("chave", {var: valor})`, com interpolação de `{var}` no
+  template.
+- **Seletor de idioma**: qualquer página só precisa ter um
+  `<select id="locale-select" autocomplete="off">` vazio — `i18n.js` popula as
+  opções (com bandeira) e escuta a troca sozinho. O `autocomplete="off"` não é
+  cosmético: sem ele, o Chrome tenta "restaurar" o valor do select depois de um
+  reload e dispara um `change` sozinho, revertendo o idioma escolhido.
+- **Conteúdo dinâmico e troca de idioma**: `data-i18n` só cobre o que já está
+  no HTML — uma tabela ou um card desenhado via JS só pega a tradução no
+  momento em que é desenhado. Por isso cada tela registra um callback via
+  `onI18nReady(fn)` (disparado a cada troca de idioma, não só no carregamento)
+  que redesenha o que precisa: `checkAuth()` de novo em `admin.html`/
+  `minhas-provas.html` (refaz o user-box e a tabela de provas), e em
+  `simulado-interativo.html` a tela inicial é redesenhada inteira, mas a prova
+  em andamento só tem o texto do rótulo de cada questão atualizado — sem
+  recriar o formulário, pra não perder as alternativas já marcadas.
 
 ## Próximos passos
 
