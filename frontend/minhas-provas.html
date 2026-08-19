@@ -90,13 +90,30 @@
   .modal-overlay.show{ display:flex; }
   .modal-box{
     background:var(--card); border-radius:4px; max-width:760px; width:100%;
-    max-height:82vh; overflow:auto; padding:22px 24px;
+    max-height:82vh; overflow-y:auto; overflow-x:hidden; padding:22px 24px;
   }
   .modal-box .close-row{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
   .modal-box table{ font-size:.78rem; }
   .cell-pct{ font-weight:700; }
   .cell-pct.good{ color:var(--right); }
   .cell-pct.bad{ color:var(--wrong); }
+  .table-scroll{ overflow-x:auto; margin-top:4px; }
+  .table-scroll table{ width:100%; }
+
+  .detail-q{ padding:12px 0; border-bottom:1px solid var(--paper-line); }
+  .detail-q:last-child{ border-bottom:none; }
+  .detail-q .qnum{ display:flex; align-items:center; gap:8px; }
+  .detail-q .mark{ font-weight:700; }
+  .detail-q .mark.right{ color:var(--right); }
+  .detail-q .mark.wrong{ color:var(--wrong); }
+  .detail-q .qtext{ font-size:.92rem; margin:6px 0; white-space:pre-line; }
+  .detail-q .opt-line{ font-size:.85rem; padding:3px 0; color:var(--ink-soft); }
+  .detail-q .opt-line.is-correct{ color:var(--right); font-weight:600; }
+  .detail-q .opt-line.is-chosen-wrong{ color:var(--wrong); font-weight:600; text-decoration:line-through; }
+  .detail-q .explain{
+    margin-top:6px; padding:10px 12px; background:#FAFAF8;
+    border-left:3px solid var(--gold); font-size:.85rem; color:var(--ink-soft);
+  }
 
   .empty-state{ text-align:center; padding:30px 10px; color:var(--ink-soft); }
 </style>
@@ -149,6 +166,16 @@
       <button class="btn-secondary" id="report-close-btn">Fechar</button>
     </div>
     <div id="report-body"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="attempt-detail-modal" style="z-index:60;">
+  <div class="modal-box">
+    <div class="close-row">
+      <h2 id="attempt-detail-title" style="margin:0;">Detalhes da tentativa</h2>
+      <button class="btn-secondary" id="attempt-detail-close-btn">Fechar</button>
+    </div>
+    <div id="attempt-detail-body"></div>
   </div>
 </div>
 
@@ -276,6 +303,7 @@ async function loadMyExams(){
 }
 
 initReportModal();
+initAttemptDetailModal();
 checkAuth();
 </script>
 

@@ -57,7 +57,7 @@ async function openReport(examId, title) {
   res.data.results.forEach(r => r.by_category.forEach(c => categoryMap.set(c.category_id, c.category_name)));
   const categories = [...categoryMap.entries()];
 
-  const header = `<tr><th>Pessoa</th><th>Nota geral</th>${categories.map(([, name]) => `<th>${name}</th>`).join("")}<th>Quando</th></tr>`;
+  const header = `<tr><th>Pessoa</th><th>Nota geral</th>${categories.map(([, name]) => `<th>${name}</th>`).join("")}<th>Quando</th><th>Detalhe</th></tr>`;
 
   const rows = res.data.results.map(r => {
     const overallCls = pctClass(r.score, r.total);
@@ -74,10 +74,59 @@ async function openReport(examId, title) {
       <td class="cell-pct ${overallCls}">${r.score}/${r.total}${passTag}${lateTag}</td>
       ${catCells}
       <td>${when}</td>
+      <td class="actions"><button class="btn-secondary" data-attempt-id="${r.attempt_id}">Ver questões</button></td>
     </tr>`;
   }).join("");
 
-  bodyEl.innerHTML = `<table><thead>${header}</thead><tbody>${rows}</tbody></table>`;
+  bodyEl.innerHTML = `<div class="table-scroll"><table><thead>${header}</thead><tbody>${rows}</tbody></table></div>`;
+  bodyEl.querySelectorAll("button[data-attempt-id]").forEach(btn => {
+    btn.addEventListener("click", () => openAttemptDetail(examId, btn.dataset.attemptId));
+  });
+}
+
+async function openAttemptDetail(examId, attemptId) {
+  const titleEl = document.getElementById("attempt-detail-title");
+  const bodyEl = document.getElementById("attempt-detail-body");
+  const modalEl = document.getElementById("attempt-detail-modal");
+  if (!titleEl || !bodyEl || !modalEl) return;
+
+  bodyEl.innerHTML = "<p>Carregando...</p>";
+  modalEl.classList.add("show");
+
+  const res = await api(`/api/exams/${examId}/attempts/${attemptId}/detail`);
+  if (!res.ok || !res.data) {
+    bodyEl.innerHTML = "<p>Não foi possível carregar os detalhes dessa tentativa.</p>";
+    return;
+  }
+
+  titleEl.textContent = `Detalhes — ${res.data.score}/${res.data.total} acertos`;
+
+  bodyEl.innerHTML = res.data.questions.map((q, i) => `
+    <div class="detail-q">
+      <div class="qnum">
+        <span class="mark ${q.is_correct ? "right" : "wrong"}">${q.is_correct ? "✓" : "✗"}</span>
+        <span style="text-transform:uppercase; font-size:.68rem; letter-spacing:.08em; color:var(--ink-soft);">
+          Questão ${i + 1} · ${q.category_name}
+        </span>
+      </div>
+      <div class="qtext">${q.question_text}</div>
+      ${q.options.map(o => {
+        const isChosen = o.id === q.chosen_option_id;
+        const cls = o.is_correct ? "is-correct" : (isChosen ? "is-chosen-wrong" : "");
+        const marker = isChosen ? "→ " : "";
+        return `<div class="opt-line ${cls}">${marker}${o.label}) ${o.option_text}</div>`;
+      }).join("")}
+      ${q.chosen_option_id === null ? `<div class="opt-line" style="font-style:italic;">Não respondida</div>` : ""}
+      ${q.explanation ? `<div class="explain">${q.explanation}</div>` : ""}
+    </div>
+  `).join("");
+}
+
+function initAttemptDetailModal() {
+  const closeBtn = document.getElementById("attempt-detail-close-btn");
+  const overlay = document.getElementById("attempt-detail-modal");
+  if (closeBtn) closeBtn.addEventListener("click", () => overlay.classList.remove("show"));
+  if (overlay) overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.classList.remove("show"); });
 }
 
 function initReportModal() {
