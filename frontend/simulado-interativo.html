@@ -97,6 +97,10 @@
     color:var(--ink-soft);
   }
   .attempt-line b{ color:var(--ink); }
+  .btn-small{
+    padding:5px 10px !important; font-size:.75rem !important;
+    background:transparent; color:var(--pine-deep); border:1px solid var(--paper-line);
+  }
 
   .qcard{
     counter-increment:qn;
@@ -197,13 +201,41 @@
   .warning-overlay{
     display:none;
     position:fixed; inset:0;
-    background:rgba(20,15,5,.55);
+    background:rgba(16,27,69,.55);
     z-index:50;
     align-items:center;
     justify-content:center;
     padding:20px;
   }
   .warning-overlay.show{ display:flex; }
+
+  .modal-overlay{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(16,27,69,.55);
+    z-index:50;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  .modal-overlay.show{ display:flex; }
+  .modal-box{
+    background:var(--card); border-radius:4px; max-width:640px; width:100%;
+    max-height:82vh; overflow:auto; padding:22px 24px;
+  }
+  .modal-box .close-row{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .modal-box .close-row h3{ font-family:Georgia,serif; margin:0; }
+  .detail-q{ padding:12px 0; border-bottom:1px solid var(--paper-line); }
+  .detail-q:last-child{ border-bottom:none; }
+  .detail-q .qnum{ display:flex; align-items:center; gap:8px; }
+  .detail-q .mark{ font-weight:700; }
+  .detail-q .mark.right{ color:var(--right); }
+  .detail-q .mark.wrong{ color:var(--wrong); }
+  .detail-q .qtext{ font-size:.92rem; margin:6px 0; white-space:pre-line; }
+  .detail-q .opt-line{ font-size:.85rem; padding:3px 0; color:var(--ink-soft); }
+  .detail-q .opt-line.is-correct{ color:var(--right); font-weight:600; }
+  .detail-q .opt-line.is-chosen-wrong{ color:var(--wrong); font-weight:600; text-decoration:line-through; }
+  .detail-q .explain{ margin-top:6px; }
   .warning-modal{
     background:var(--card);
     border:2px solid var(--wrong);
@@ -265,6 +297,7 @@
   #submit-btn{ background:var(--pine); color:#fff; }
   #submit-btn:hover{ background:var(--pine-deep); }
   #submit-btn:disabled{ background:#C7CBD8; cursor:not-allowed; }
+  #start-btn:disabled{ background:#C7CBD8; cursor:not-allowed; }
   #retry-btn{ background:transparent; color:var(--pine-deep); border:1.5px solid var(--pine-deep); }
 
   .result-banner{
@@ -373,6 +406,7 @@
     <div class="exam-meta" id="start-meta"></div>
     <div id="start-history" class="panel ui" style="text-align:left; max-width:420px; margin:0 auto 16px;"></div>
     <button id="start-btn">Começar a prova</button>
+    <div id="cooldown-msg" class="ui" style="display:none; margin-top:10px; font-size:.85rem; color:var(--ink-soft);"></div>
   </div>
 
   <!-- Prova em andamento / resultado -->
@@ -391,6 +425,7 @@
       <div class="ui" style="color:var(--ink-soft); margin-top:4px;">registrado no seu histórico</div>
       <div id="pass-badge-wrap"></div>
       <div class="by-area" id="result-by-area"></div>
+      <button type="button" id="view-detail-btn" style="margin-top:10px; background:transparent; color:var(--pine-deep); border:1.5px solid var(--pine-deep);">Ver detalhes</button>
       <div class="integrity-summary ui" id="integrity-summary"></div>
     </div>
 
@@ -415,6 +450,16 @@
       Continue normalmente se foi sem querer.
     </p>
     <button type="button" id="warning-ack-btn">Entendi, continuar</button>
+  </div>
+</div>
+
+<div class="modal-overlay ui" id="detail-modal">
+  <div class="modal-box">
+    <div class="close-row">
+      <h3 id="detail-title">Detalhes da tentativa</h3>
+      <button type="button" id="detail-close-btn" style="background:transparent; color:var(--ink-soft);">Fechar ✕</button>
+    </div>
+    <div id="detail-body"></div>
   </div>
 </div>
 
@@ -503,21 +548,70 @@ async function showStartScreen(){
 
   const histWrap = document.getElementById("start-history");
   const hist = await api(`/api/exams/${exam.id}/history`);
+  let retryAt = null;
   if (hist.ok && hist.data.length > 0){
     const last = hist.data[hist.data.length - 1];
     const best = hist.data.reduce((a,b) => b.score > a.score ? b : a, hist.data[0]);
+    const rows = hist.data.slice().reverse().map(a => `
+      <div class="attempt-line">
+        <span><b>${a.score}/${a.total}</b> · ${new Date(a.submitted_at).toLocaleDateString("pt-BR")}${a.passed === false ? " · abaixo da nota mínima" : ""}</span>
+        <button type="button" class="btn-small detail-link-btn" data-attempt="${a.id}">Detalhes</button>
+      </div>`).join("");
     histWrap.innerHTML = `<strong class="ui">Seu histórico nessa prova</strong><br class="ui">
-      <span class="ui">Última tentativa: ${last.score}/${last.total} · Melhor: ${best.score}/${best.total} · ${hist.data.length} tentativa(s)</span>`;
+      <span class="ui">Última tentativa: ${last.score}/${last.total} · Melhor: ${best.score}/${best.total} · ${hist.data.length} tentativa(s)</span>
+      <div id="history-list">${rows}</div>`;
+    histWrap.querySelectorAll(".detail-link-btn").forEach(btn => {
+      btn.addEventListener("click", () => openAttemptDetail(btn.dataset.attempt));
+    });
+    retryAt = new Date(last.submitted_at).getTime() + RETRY_COOLDOWN_MS;
   } else {
     histWrap.innerHTML = `<span class="ui" style="color:var(--ink-soft);">Você ainda não tentou essa prova.</span>`;
   }
 
+  applyCooldown(retryAt);
   showScreen("screen-start");
+}
+
+const RETRY_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+let cooldownInterval = null;
+
+function formatRemaining(ms){
+  const totalMin = Math.max(0, Math.ceil(ms / 60000));
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  if (h > 0) return `${h}h${m > 0 ? ` ${m}min` : ""}`;
+  return `${m}min`;
+}
+
+function applyCooldown(retryAt){
+  const btn = document.getElementById("start-btn");
+  const msg = document.getElementById("cooldown-msg");
+  clearInterval(cooldownInterval);
+
+  const tick = () => {
+    const remaining = retryAt ? retryAt - Date.now() : 0;
+    if (!retryAt || remaining <= 0){
+      clearInterval(cooldownInterval);
+      btn.disabled = false;
+      msg.style.display = "none";
+      return;
+    }
+    btn.disabled = true;
+    msg.style.display = "block";
+    msg.textContent = `Você já fez essa prova recentemente. Pra refazer, espere mais ${formatRemaining(remaining)}.`;
+  };
+
+  tick();
+  if (retryAt) cooldownInterval = setInterval(tick, 30000);
 }
 
 document.getElementById("start-btn").addEventListener("click", async () => {
   const res = await api(`/api/exams/${exam.id}/attempts/start`, { method: "POST" });
   if (!res.ok){
+    if (res.data && res.data.error === "retry_cooldown"){
+      applyCooldown(new Date(res.data.retry_at).getTime());
+      return;
+    }
     alert("Não foi possível iniciar a prova. Tente recarregar a página.");
     return;
   }
@@ -530,6 +624,51 @@ document.getElementById("start-btn").addEventListener("click", async () => {
   setupFocusMonitoring();
   setupTimer();
 });
+
+// ---------- Detalhe de uma tentativa (questão a questão) ----------
+async function openAttemptDetail(attemptId){
+  const modal = document.getElementById("detail-modal");
+  const body = document.getElementById("detail-body");
+  body.innerHTML = `<p class="ui" style="color:var(--ink-soft);">Carregando...</p>`;
+  modal.classList.add("show");
+
+  const res = await api(`/api/exams/${exam.id}/attempts/${attemptId}/detail`);
+  if (!res.ok){
+    body.innerHTML = `<p class="ui" style="color:var(--wrong);">Não foi possível carregar os detalhes dessa tentativa.</p>`;
+    return;
+  }
+
+  document.getElementById("detail-title").textContent =
+    `Detalhes — ${res.data.score}/${res.data.total} acertos`;
+
+  body.innerHTML = res.data.questions.map((q, i) => `
+    <div class="detail-q">
+      <div class="qnum">
+        <span class="mark ${q.is_correct ? "right" : "wrong"}">${q.is_correct ? "✓" : "✗"}</span>
+        <span class="ui" style="text-transform:uppercase; font-size:.68rem; letter-spacing:.08em; color:var(--ink-soft);">
+          Questão ${i + 1} · ${q.category_name}
+        </span>
+      </div>
+      <div class="qtext">${q.question_text}</div>
+      ${q.options.map(o => {
+        const isChosen = o.id === q.chosen_option_id;
+        const cls = o.is_correct ? "is-correct" : (isChosen ? "is-chosen-wrong" : "");
+        const marker = isChosen ? "→ " : "";
+        return `<div class="opt-line ui ${cls}">${marker}${o.label}) ${o.option_text}</div>`;
+      }).join("")}
+      ${q.chosen_option_id === null ? `<div class="opt-line ui" style="font-style:italic;">Não respondida</div>` : ""}
+      ${q.explanation ? `<div class="explain show ui">${q.explanation}</div>` : ""}
+    </div>
+  `).join("");
+}
+
+document.getElementById("detail-close-btn").addEventListener("click", () => {
+  document.getElementById("detail-modal").classList.remove("show");
+});
+document.getElementById("detail-modal").addEventListener("click", (e) => {
+  if (e.target.id === "detail-modal") e.target.classList.remove("show");
+});
+document.getElementById("view-detail-btn").addEventListener("click", () => openAttemptDetail(attemptId));
 
 // ---------- Renderização das questões ----------
 const LETTERS = ["A","B","C","D","E","F","G","H"];

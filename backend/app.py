@@ -16,6 +16,7 @@ app.static("/", "/app/frontend", index="minhas-provas.html")
 
 SESSION_COOKIE = "session"
 SUPPORTED_LOCALES = ("pt-BR", "en", "es")
+RETRY_COOLDOWN_HOURS = 24
 # Guarda temporária dos "state" do OAuth -> path de retorno após o login.
 # Em produção com mais de um processo/worker, troque por Redis ou pela
 # própria tabela do Postgres.
@@ -536,6 +537,20 @@ async def start_attempt(request, exam_id, user_id):
         if not exam:
             return json_response({"error": "not_found"}, status=404)
 
+        last_attempt = await conn.fetchrow(
+            "SELECT submitted_at FROM attempts WHERE exam_id = $1 AND user_id = $2 "
+            "AND submitted_at IS NOT NULL ORDER BY submitted_at DESC LIMIT 1",
+            exam_id, user_id,
+        )
+        if last_attempt:
+            retry_at = last_attempt["submitted_at"] + timedelta(hours=RETRY_COOLDOWN_HOURS)
+            now = datetime.now(timezone.utc)
+            if now < retry_at:
+                return json_response({
+                    "error": "retry_cooldown",
+                    "retry_at": retry_at.isoformat(),
+                }, status=429)
+
         row = await conn.fetchrow(
             "INSERT INTO attempts (exam_id, user_id) VALUES ($1, $2) RETURNING id, started_at",
             exam_id, user_id,
@@ -879,6 +894,74 @@ async def attempt_report(request, exam_id, attempt_id, user_id):
             {"category_id": r["category_id"], "category_name": r["category_name"],
              "correct": r["category_correct"], "total": r["category_total"]}
             for r in rows
+        ],
+    })
+
+
+@app.get("/api/exams/<exam_id:int>/attempts/<attempt_id:int>/detail")
+@require_auth
+async def attempt_detail(request, exam_id, attempt_id, user_id):
+    """Detalhe questão a questão de UMA tentativa: o que foi respondido, qual
+    era a certa e a explicação — acessível pelo próprio candidato (pra montar
+    um plano de estudo com o que errou), pelo dono da prova ou por um admin."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        attempt = await conn.fetchrow(
+            "SELECT id, user_id, score, total, passed, submitted_at FROM attempts "
+            "WHERE id = $1 AND exam_id = $2",
+            attempt_id, exam_id,
+        )
+        if not attempt:
+            return json_response({"error": "not_found"}, status=404)
+        if attempt["submitted_at"] is None:
+            return json_response({"error": "attempt_not_submitted"}, status=409)
+
+        is_self = str(attempt["user_id"]) == user_id
+        if not is_self:
+            _, allowed = await _require_exam_access(conn, exam_id, user_id)
+            if not allowed:
+                return json_response({"error": "forbidden"}, status=403)
+
+        answers = await conn.fetch(
+            """
+            SELECT q.id AS question_id, q.position, q.question_text, q.explanation,
+                   c.name AS category_name, aa.option_id AS chosen_option_id, aa.is_correct
+            FROM attempt_answers aa
+            JOIN questions q ON q.id = aa.question_id
+            JOIN categories c ON c.id = q.category_id
+            WHERE aa.attempt_id = $1
+            ORDER BY q.position
+            """,
+            attempt_id,
+        )
+        question_ids = [r["question_id"] for r in answers]
+        options = await conn.fetch(
+            "SELECT id, question_id, label, option_text, is_correct FROM options "
+            "WHERE question_id = ANY($1::int[]) ORDER BY question_id, label",
+            question_ids,
+        )
+        opts_by_question: dict[int, list] = {}
+        for o in options:
+            opts_by_question.setdefault(o["question_id"], []).append(
+                {"id": o["id"], "label": o["label"], "option_text": o["option_text"], "is_correct": o["is_correct"]}
+            )
+
+    return json_response({
+        "attempt_id": attempt_id,
+        "score": attempt["score"], "total": attempt["total"], "passed": attempt["passed"],
+        "submitted_at": attempt["submitted_at"].isoformat(),
+        "questions": [
+            {
+                "question_id": r["question_id"],
+                "position": r["position"],
+                "category_name": r["category_name"],
+                "question_text": r["question_text"],
+                "explanation": r["explanation"],
+                "is_correct": r["is_correct"],
+                "chosen_option_id": r["chosen_option_id"],
+                "options": opts_by_question.get(r["question_id"], []),
+            }
+            for r in answers
         ],
     })
 
