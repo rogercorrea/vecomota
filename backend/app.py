@@ -688,6 +688,32 @@ async def exam_history(request, exam_id, user_id):
     ])
 
 
+@app.get("/api/me/attempts")
+@require_auth
+async def my_attempts(request, user_id):
+    """Todas as tentativas finalizadas da pessoa, em qualquer prova — a base
+    da área "Provas que você já fez" pra quem não é dono/admin de nada."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT a.id AS attempt_id, a.exam_id, e.title AS exam_title,
+                   a.score, a.total, a.passed, a.late, a.submitted_at
+            FROM attempts a
+            JOIN exams e ON e.id = a.exam_id
+            WHERE a.user_id = $1 AND a.submitted_at IS NOT NULL
+            ORDER BY a.submitted_at DESC
+            """,
+            user_id,
+        )
+    return json_response([
+        {"attempt_id": r["attempt_id"], "exam_id": r["exam_id"], "exam_title": r["exam_title"],
+         "score": r["score"], "total": r["total"], "passed": r["passed"], "late": r["late"],
+         "submitted_at": r["submitted_at"].isoformat()}
+        for r in rows
+    ])
+
+
 @app.get("/api/me/stats")
 @require_auth
 async def my_stats(request, user_id):

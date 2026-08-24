@@ -141,6 +141,11 @@
   <div id="app" class="hide">
 
     <div class="panel">
+      <h2 data-i18n="myexams_history_title">Provas que você já fez</h2>
+      <div id="attempts-wrap"></div>
+    </div>
+
+    <div class="panel">
       <h2 data-i18n="myexams_create_title">Criar uma prova nova</h2>
       <p class="hint" data-i18n-html="myexams_create_hint">
         Cole o JSON no formato padrão (ou suba um arquivo). Toda questão precisa de uma
@@ -208,7 +213,52 @@ async function checkAuth(){
     ${me.data.is_admin ? `<a class="btn btn-ghost" href="admin.html">${t("nav_admin")}</a>` : ''}
     <a class="btn btn-ghost" href="/api/auth/logout">${t("logout")}</a>
   `;
+  loadMyAttempts();
   loadMyExams();
+}
+
+async function loadMyAttempts(){
+  const res = await api("/api/me/attempts");
+  const wrap = document.getElementById("attempts-wrap");
+  if (!res.ok){
+    wrap.innerHTML = `<p class="empty-state">${t("myexams_history_load_failed")}</p>`;
+    return;
+  }
+  if (res.data.length === 0){
+    wrap.innerHTML = `<p class="empty-state">${t("myexams_history_empty")}</p>`;
+    return;
+  }
+  wrap.innerHTML = `
+    <table>
+      <thead>
+        <tr><th>${t("th_title")}</th><th>${t("th_score")}</th><th>${t("th_when")}</th><th>${t("th_detail")}</th></tr>
+      </thead>
+      <tbody id="attempts-tbody"></tbody>
+    </table>
+  `;
+  const tbody = document.getElementById("attempts-tbody");
+  tbody.innerHTML = res.data.map(a => {
+    const passTag = a.passed === true ? " ✓" : a.passed === false ? " ✗" : "";
+    const lateTag = a.late ? ` (${t("late_tag")})` : "";
+    const when = new Date(a.submitted_at).toLocaleDateString(dateLocale());
+    return `
+      <tr data-exam-id="${a.exam_id}" data-attempt-id="${a.attempt_id}">
+        <td>${a.exam_title}</td>
+        <td class="cell-pct ${pctClass(a.score, a.total)}">${a.score}/${a.total}${passTag}${lateTag}</td>
+        <td>${when}</td>
+        <td class="actions">
+          <button class="btn-secondary detail-btn">${t("details")}</button>
+          <a class="btn-secondary" href="simulado-interativo.html?exam=${a.exam_id}">${t("retry_from_scratch")}</a>
+        </td>
+      </tr>`;
+  }).join("");
+
+  tbody.querySelectorAll(".detail-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const tr = e.target.closest("tr");
+      openAttemptDetail(tr.dataset.examId, tr.dataset.attemptId);
+    });
+  });
 }
 
 document.getElementById("file-input").addEventListener("change", (e) => {
